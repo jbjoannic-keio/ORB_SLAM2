@@ -114,6 +114,10 @@ namespace ORB_SLAM2
 
         mpLoopCloser->SetTracker(mpTracker);
         mpLoopCloser->SetLocalMapper(mpLocalMapper);
+
+        // 3dGRID
+        grid = new ThreeDimensionalFrame(strSettingsFile);
+        grid->createGrid(-1, 1, 1, 1, 5, 10);
     }
 
     cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
@@ -261,7 +265,13 @@ namespace ORB_SLAM2
         }
 
         cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp);
-
+        // 3dGRID
+        if (!Tcw.empty())
+        {
+            grid->computeGridRotation(Tcw);
+            grid->correctGridRotation();
+            grid->projectGrid(im);
+        }
         unique_lock<mutex> lock2(mMutexState);
         mTrackingState = mpTracker->mState;
         mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
