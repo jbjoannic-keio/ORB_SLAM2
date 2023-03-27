@@ -9,7 +9,7 @@ videos_folder="$1"
 frames_folder="$2"
 output_frame_rate=30
 
-for video_file in "$videos_folder"/*; do
+for video_file in "$videos_folder"/LapC1.MP4; do
 
 
     if [ -d "$video_file" ]; then
@@ -25,8 +25,7 @@ for video_file in "$videos_folder"/*; do
     # Create folder for frames
     mkdir -p "$frames_folder/$video_name/frames"
 
-    # Create time.txt file
-    ffmpeg -i "$video_file" -r $output_frame_rate -vf "scale=480:270" "$frames_folder/$video_name/frames/%04d.png"
+    ffmpeg -i "$video_file" -r $output_frame_rate -start_number 0 -vf "scale=480:270" "$frames_folder/$video_name/frames/%06d.png"
 
 
 
