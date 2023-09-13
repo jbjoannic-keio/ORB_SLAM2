@@ -90,6 +90,9 @@ namespace ORB_SLAM2
         Twc.SetIdentity();
 
         cv::namedWindow("ORB-SLAM2: Current Frame");
+        cv::namedWindow("ORB-SLAM2: Inliers");
+        cv::namedWindow("ORB-SLAM2: Outliers");
+        cv::namedWindow("ORB-SLAM2: InOutliers");
 
         bool bFollow = true;
         bool bLocalizationMode = false;
@@ -136,10 +139,27 @@ namespace ORB_SLAM2
 
             pangolin::FinishFrame();
 
-            cv::Mat im = mpFrameDrawer->DrawFrame();
+            std::vector<cv::Mat> imVec = mpFrameDrawer->DrawFrame();
+            cv::Mat im = imVec[0];
+            cv::Mat imInliers = imVec[1];
+            cv::Mat imOutliers = imVec[2];
+            cv::Mat imInOutliers = imVec[3];
             cv::imshow("ORB-SLAM2: Current Frame", im);
-            cv::waitKey(mT);
+            cv::imshow("ORB-SLAM2: Inliers", imInliers);
+            cv::imshow("ORB-SLAM2: Outliers", imOutliers);
+            cv::imshow("ORB-SLAM2: InOutliers", imInOutliers);
+            char key = cv::waitKey(mT);
 
+            if (key == 'q')
+            {
+                mpFrameDrawer->outGrid.release();
+                mpFrameDrawer->outAll.release();
+                mpFrameDrawer->outInliers.release();
+                mpFrameDrawer->outOutliers.release();
+                mpFrameDrawer->outInOutliers.release();
+
+                exit(0);
+            }
             if (menuReset)
             {
                 menuShowGraph = true;

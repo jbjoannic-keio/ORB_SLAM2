@@ -412,7 +412,7 @@ namespace ORB_SLAM2
             unique_lock<mutex> lock(mMutexGBA);
             mbStopGBA = true;
 
-            mnFullBAIdx++;
+            mnFullBAIdx = !mnFullBAIdx;
 
             if (mpThreadGBA)
             {

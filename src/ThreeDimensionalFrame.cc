@@ -2,7 +2,7 @@
 
 namespace ORB_SLAM2
 {
-    ThreeDimensionalFrame::ThreeDimensionalFrame(const std::string &strSettingPath)
+    ThreeDimensionalFrame::ThreeDimensionalFrame(const std::string &strSettingPath, const std::string &strPath)
     {
         cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
         float fx = fSettings["Camera.fx"];
@@ -92,7 +92,6 @@ namespace ORB_SLAM2
 
         Rwc.rowRange(0, 3).colRange(0, 3) = Tcw.rowRange(0, 3).colRange(0, 3).t();
         Rwc.at<float>(3, 3) = 1;
-        std::cout << "tcwz: " << Tcw << std::endl;
 
         cv::Mat t = Tcw.rowRange(0, 3).col(3);
         cv::Mat twc = -Tcw.rowRange(0, 3).colRange(0, 3).t() * t;
@@ -143,10 +142,13 @@ namespace ORB_SLAM2
         correctedRotationGridPoints = std::make_pair(corrected, correctedLine_direction);
     };
 
-    void ThreeDimensionalFrame::projectGrid(const cv::Mat &img)
+    cv::Mat ThreeDimensionalFrame::projectGrid(const cv::Mat &img)
     {
         cv::Mat copy;
-        cvtColor(img, copy, CV_GRAY2RGB);
+        if (img.channels() == 1)
+            cvtColor(img, copy, CV_GRAY2RGB);
+        else
+            copy = img.clone();
 
         Eigen::Map<Eigen::Matrix3f> mKEigen(mK.ptr<float>(), 3, 3);
         std::vector<cv::Scalar> colors = {cv::Scalar(100, 100, 100), cv::Scalar(255, 255, 255), cv::Scalar(100, 150, 0)};
@@ -168,11 +170,7 @@ namespace ORB_SLAM2
         }
 
         cv::imshow("RAW", copy);
+        return copy;
     }
-    /*
-        cv::Mat ThreeDimensionalFrame::computeGridRotation(){};
-        cv::Mat ThreeDimensionalFrame::correctGridRotation(){};
-        cv::Mat ThreeDimensionalFrame::projectGrid(){};
-        cv::Mat ThreeDimensionalFrame::computeImg(){};
-        */
+
 }

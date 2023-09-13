@@ -9,7 +9,7 @@ videos_folder="$1"
 frames_folder="$2"
 output_frame_rate=30
 
-for video_file in "$videos_folder"/LapC1.MP4; do
+for video_file in "$videos_folder"/*; do
 
 
     if [ -d "$video_file" ]; then
@@ -22,10 +22,21 @@ for video_file in "$videos_folder"/LapC1.MP4; do
     # Extract video filename without extension
     video_name=$(basename -- "$video_file")
     video_name="${video_name%.*}"
+
+    ffprobe_output=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "$video_file" 2>&1)
+    width=$(echo "$ffprobe_output" | cut -d 'x' -f 1)
+    height=$(echo "$ffprobe_output" | cut -d 'x' -f 2)
+    echo "Video resolution: $width x $height"
+    if ( [ "$height" -eq 1080 ] ); then
+        newHeight=270
+    else
+        newHeight=360
+    fi
+    echo "New resolution: 480 x $newHeight"
     # Create folder for frames
     mkdir -p "$frames_folder/$video_name/frames"
 
-    ffmpeg -i "$video_file" -r $output_frame_rate -start_number 0 -vf "scale=480:270" "$frames_folder/$video_name/frames/%06d.png"
+    ffmpeg -i "$video_file" -r $output_frame_rate -start_number 0 -vf "scale=480:$newHeight" "$frames_folder/$video_name/frames/%06d.png"
 
 
 

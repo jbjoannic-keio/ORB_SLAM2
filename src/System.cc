@@ -30,9 +30,8 @@
 namespace ORB_SLAM2
 {
 
-    System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,
-                   const bool bUseViewer) : mSensor(sensor), mpViewer(static_cast<Viewer *>(NULL)), mbReset(false), mbActivateLocalizationMode(false),
-                                            mbDeactivateLocalizationMode(false)
+    System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const string &strPath, const bool bUseViewer) : mSensor(sensor), mpViewer(static_cast<Viewer *>(NULL)), mbReset(false), mbActivateLocalizationMode(false),
+                                                                                                                                                  mbDeactivateLocalizationMode(false)
     {
         // Output welcome message
         cout << endl
@@ -81,7 +80,7 @@ namespace ORB_SLAM2
         mpMap = new Map();
 
         // Create Drawers. These are used by the Viewer
-        mpFrameDrawer = new FrameDrawer(mpMap);
+        mpFrameDrawer = new FrameDrawer(mpMap, strPath);
         mpMapDrawer = new MapDrawer(mpMap, strSettingsFile);
 
         // Initialize the Tracking thread
@@ -116,8 +115,11 @@ namespace ORB_SLAM2
         mpLoopCloser->SetLocalMapper(mpLocalMapper);
 
         // 3dGRID
-        grid = new ThreeDimensionalFrame(strSettingsFile);
-        grid->createGrid(-1, 1, 1, 1, 5, 10);
+        grid = new ThreeDimensionalFrame(strSettingsFile, strPath);
+        grid->createGrid(-10, 10, 1, 1, -30, 30);
+
+        // DL Model
+        model = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_script.pt");
     }
 
     cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
@@ -265,17 +267,27 @@ namespace ORB_SLAM2
         }
 
         cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp);
+        std::cout << "Tcw final: " << Tcw << std::endl
+                  << std::endl;
         // 3dGRID
         if (!Tcw.empty())
         {
             grid->computeGridRotation(Tcw);
             grid->correctGridRotation();
-            grid->projectGrid(im);
+
+            mpFrameDrawer->gridActualize(grid->projectGrid(im));
         }
         unique_lock<mutex> lock2(mMutexState);
         mTrackingState = mpTracker->mState;
         mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
         mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
+
+        // DL Model
+        if (!im.empty())
+        {
+            cv::Mat mask = model->mask(im);
+            cv::Mat fused = model->fuse(im, mask);
+        }
 
         return Tcw;
     }

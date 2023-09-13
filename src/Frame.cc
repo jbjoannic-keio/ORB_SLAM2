@@ -201,7 +201,6 @@ namespace ORB_SLAM2
 
         mvpMapPoints = vector<MapPoint *>(N, static_cast<MapPoint *>(NULL));
         mvbOutlier = vector<bool>(N, false);
-
         // This is done only for the first Frame (or after a change in the calibration)
         if (mbInitialComputations)
         {

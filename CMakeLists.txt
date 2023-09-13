@@ -7,8 +7,10 @@ ENDIF()
 
 MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3 -march=native")
+
+set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON)
 
 # Check C++14 or C++0x support
 include(CheckCXXCompilerFlag)
@@ -23,11 +25,10 @@ elseif(COMPILER_SUPPORTS_CXX0X)
    add_definitions(-DCOMPILEDWITHC0X)
    message(STATUS "Using flag -std=c++0x.")
 else()
-   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support. Please use a different C++ compiler.")
+   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
-
 find_package(OpenCV 3.0 QUIET)
 if(NOT OpenCV_FOUND)
    find_package(OpenCV 2.4.3 QUIET)
@@ -35,9 +36,15 @@ if(NOT OpenCV_FOUND)
       message(FATAL_ERROR "OpenCV > 2.4.3 not found.")
    endif()
 endif()
+message(STATUS "OpenCV version: ${OpenCV_VERSION}")
 
-find_package(Eigen3 3.1.0 REQUIRED)
-find_package(Pangolin REQUIRED)
+set(CMAKE_PREFIX_PATH "/home/jbjoannic/Documents/Recherche/orbSlam/libtorch/share/cmake/Torch")
+find_package(Torch REQUIRED)
+message(STATUS "Torch include dirs: ${TORCH_INCLUDE_DIRS}")
+
+find_package(Eigen3 3.1.0 REQUIRED NO_MODULE)
+message(STATUS "Eigen3 include dirs: ${EIGEN3_INCLUDE_DIR}")
+find_package(Pangolin REQUIRED PATHS "/usr/local/include")
 
 include_directories(
 ${PROJECT_SOURCE_DIR}
@@ -45,6 +52,7 @@ ${PROJECT_SOURCE_DIR}/include
 ${EIGEN3_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
 )
+message(STATUS "INCLUDED")
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
@@ -60,6 +68,7 @@ src/Converter.cc
 src/MapPoint.cc
 src/KeyFrame.cc
 src/Map.cc
+src/DynamicEraser.cc
 src/MapDrawer.cc
 src/Optimizer.cc
 src/PnPsolver.cc
@@ -68,7 +77,8 @@ src/KeyFrameDatabase.cc
 src/Sim3Solver.cc
 src/Initializer.cc
 src/Viewer.cc
-src//ThreeDimensionalFrame.cc
+src/ThreeDimensionalFrame.cc
+src/RobotSurgerySegmentation.cc
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -77,7 +87,9 @@ ${EIGEN3_LIBS}
 ${Pangolin_LIBRARIES}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+"${TORCH_LIBRARIES}"
 )
+
 
 # Build examples
 

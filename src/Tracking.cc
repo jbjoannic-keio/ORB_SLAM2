@@ -148,6 +148,7 @@ namespace ORB_SLAM2
             else
                 mDepthMapFactor = 1.0f / mDepthMapFactor;
         }
+        dynamicEraser = new DynamicEraser(mK);
     }
 
     void Tracking::SetLocalMapper(LocalMapping *pLocalMapper)
@@ -269,6 +270,11 @@ namespace ORB_SLAM2
         {
             mState = NOT_INITIALIZED;
         }
+
+        // for (int i = 0; i < mCurrentFrame.N; i++)
+        // {
+        //     std::cout << "mcurrentkey" << mCurrentFrame.mvKeysUn[i].pt.x << " " << mCurrentFrame.mvKeysUn[i].pt.y << std::endl;
+        // }
 
         mLastProcessedState = mState;
 
@@ -889,7 +895,14 @@ namespace ORB_SLAM2
         if (nmatches < 20)
             return false;
 
-        // Optimize frame pose with all matches
+        // ICI ON SUPPRIME LES OUTLIERS AVEC LE RANSAC, AFFICHAGE AUSSI SI ON EST CHAUD
+        couplesPoints = dynamicEraser->searchMatchesKeyFrame(mCurrentFrame, mLastFrame);
+        // couplesPointsRansac = dynamicEraser->Ransac(couplesPoints);
+        auto output = dynamicEraser->RealRansac(couplesPoints);
+        couplesPointsRansacInliers = output.first;
+        couplesPointsRansacOutliers = output.second;
+        //  dynamicEraser->main();
+        //  Optimize frame pose with all matches
         Optimizer::PoseOptimization(&mCurrentFrame);
 
         // Discard outliers
@@ -932,7 +945,7 @@ namespace ORB_SLAM2
         SearchLocalPoints();
 
         // Optimize Pose
-        Optimizer::PoseOptimization(&mCurrentFrame);
+        Optimizer::PoseOptimization(&mCurrentFrame); // MODIFTCW
         mnMatchesInliers = 0;
 
         // Update MapPoints Statistics

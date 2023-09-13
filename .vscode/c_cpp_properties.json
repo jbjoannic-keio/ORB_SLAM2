@@ -4,17 +4,13 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/include/**",
-                "/home/jbjoannic/Documents/Recherche/orbSlam/eigen-3.4.0/Eigen/**",
-                "/home/jbjoannic/Documents/Recherche/orbSlam/Pangolin/include/**",
-                "/home/jbjoannic/Documents/Recherche/pySlam/pyslam/thirdparty/pangolin/include",
-                "/home/jbjoannic/Documents/Recherche/pySlam/pyslam/thirdparty/pangolin/include"
+                "/usr/local/include/**"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/clang",
-            "cStandard": "c17",
-            "cppStandard": "c++14",
-            "intelliSenseMode": "linux-clang-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "linux-gcc-x64",
             "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
