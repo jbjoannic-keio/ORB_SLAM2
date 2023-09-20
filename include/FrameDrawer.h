@@ -52,6 +52,7 @@ namespace ORB_SLAM2
         cv::VideoWriter outInliers;
         cv::VideoWriter outOutliers;
         cv::VideoWriter outInOutliers;
+        cv::VideoWriter outDL;
 
     protected:
         void DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText);
@@ -76,10 +77,15 @@ namespace ORB_SLAM2
         std::vector<std::pair<cv::Point2f, cv::Point2f>> mvCurrentMatchesRansacInliers;
         std::vector<std::pair<cv::Point2f, cv::Point2f>> mvCurrentMatchesRansacOutliers;
 
+        // DL
+        cv::Mat imDL;
+
     public:
         cv::Mat imgGrid;
 
         void gridActualize(cv::Mat grid);
+
+        void drawDLModel(cv::Mat imDL);
     };
 
 } // namespace ORB_SLAM

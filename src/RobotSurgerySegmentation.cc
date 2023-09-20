@@ -44,4 +44,4 @@ namespace ORB_SLAM2
         return fused;
     }
 
-}
+} // namespace ORB_SLAM2

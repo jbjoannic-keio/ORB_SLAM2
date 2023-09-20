@@ -287,6 +287,7 @@ namespace ORB_SLAM2
         {
             cv::Mat mask = model->mask(im);
             cv::Mat fused = model->fuse(im, mask);
+            mpFrameDrawer->drawDLModel(fused);
         }
 
         return Tcw;

@@ -42,6 +42,7 @@ namespace ORB_SLAM2
         outInliers = cv::VideoWriter(strPath + "results/outputInliers.mp4", fourcc, fps, cv::Size(480, 270));
         outOutliers = cv::VideoWriter(strPath + "results/outputOutliers.mp4", fourcc, fps, cv::Size(480, 270));
         outInOutliers = cv::VideoWriter(strPath + "results/outputInOutliers.mp4", fourcc, fps, cv::Size(480, 270));
+        outDL = cv::VideoWriter(strPath + "results/outputDL.mp4", fourcc, fps, cv::Size(480, 270));
     }
 
     std::vector<cv::Mat> FrameDrawer::DrawFrame()
@@ -178,12 +179,16 @@ namespace ORB_SLAM2
             // matplotlibcpp::show();
         }
 
+        // DL Model
+        cv::Mat imDL = imgGrid.clone();
+
         cv::Mat imWithInfo;
         DrawTextInfo(im, state, imWithInfo);
         vectIm.push_back(imWithInfo);
         vectIm.push_back(imInliers);
         vectIm.push_back(imOutliers);
         vectIm.push_back(imInOutliers);
+        vectIm.push_back(imDL);
         outAll.write(im);
         outInliers.write(imInliers);
         outOutliers.write(imOutliers);
@@ -271,6 +276,12 @@ namespace ORB_SLAM2
     {
         imgGrid = grid.clone();
         outGrid.write(imgGrid);
+    }
+
+    void FrameDrawer::drawDLModel(cv::Mat imDL)
+    {
+        imDL = imDL.clone();
+        outDL.write(imDL);
     }
 
 } // namespace ORB_SLAM

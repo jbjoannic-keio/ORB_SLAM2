@@ -93,6 +93,7 @@ namespace ORB_SLAM2
         cv::namedWindow("ORB-SLAM2: Inliers");
         cv::namedWindow("ORB-SLAM2: Outliers");
         cv::namedWindow("ORB-SLAM2: InOutliers");
+        cv::namedWindow("ORB-SLAM2: DL Model");
 
         bool bFollow = true;
         bool bLocalizationMode = false;
@@ -144,10 +145,12 @@ namespace ORB_SLAM2
             cv::Mat imInliers = imVec[1];
             cv::Mat imOutliers = imVec[2];
             cv::Mat imInOutliers = imVec[3];
+            cv::Mat imDL = imVec[4];
             cv::imshow("ORB-SLAM2: Current Frame", im);
             cv::imshow("ORB-SLAM2: Inliers", imInliers);
             cv::imshow("ORB-SLAM2: Outliers", imOutliers);
             cv::imshow("ORB-SLAM2: InOutliers", imInOutliers);
+            cv::imshow("ORB-SLAM2: DL Model", imDL);
             char key = cv::waitKey(mT);
 
             if (key == 'q')
