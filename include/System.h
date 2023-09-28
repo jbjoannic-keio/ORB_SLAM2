@@ -179,7 +179,8 @@ namespace ORB_SLAM2
         ThreeDimensionalFrame *grid;
 
         // DL Model
-        RobotSurgerySegmentation *model;
+        RobotSurgerySegmentation *model_small;
+        RobotSurgerySegmentation *model_big;
     };
 
 } // namespace ORB_SLAM

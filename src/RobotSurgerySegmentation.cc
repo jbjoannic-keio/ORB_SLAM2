@@ -2,17 +2,28 @@
 
 namespace ORB_SLAM2
 {
-    RobotSurgerySegmentation::RobotSurgerySegmentation(std::string modelPath)
+    RobotSurgerySegmentation::RobotSurgerySegmentation(std::string modelPath, bool big)
     {
         std::string modelName = modelPath.substr(modelPath.find_last_of("/") + 1, modelPath.find_last_of(".") - modelPath.find_last_of("/") - 1);
-        std::cout << "Loading model: " << modelName << std::endl;
+
         model = torch::jit::load(modelPath);
         model.to(at::kCUDA);
+        isBig = big;
     }
 
-    cv::Mat RobotSurgerySegmentation::mask(cv::Mat image)
+    cv::Mat RobotSurgerySegmentation::mask(cv::Mat imagesrc)
     {
-        // TODO
+        cv::Mat image = imagesrc.clone();
+        if (isBig)
+        {
+            image = image(cv::Range(7, 7 + 256), cv::Range(32, 32 + 416));
+            cv::resize(image, image, cv::Size(1664, 1024));
+        }
+        else
+        {
+            image = image(cv::Range(7, 7 + 256), cv::Range(32, 32 + 416));
+        }
+
         cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
         image.convertTo(image, CV_32FC3, 1.0f / 255.0f);
 
@@ -32,15 +43,22 @@ namespace ORB_SLAM2
 
         cv::threshold(outputImage, outputImage, 0.5, 255, cv::THRESH_BINARY);
         outputImage.convertTo(outputImage, CV_8U);
-
+        // resize anyway
+        cv::resize(outputImage, outputImage, cv::Size(416, 256));
         return outputImage;
     }
 
     cv::Mat RobotSurgerySegmentation::fuse(cv::Mat image, cv::Mat mask)
     {
+
+        // add zero padding to mask to match image size
+        cv::Mat paddedMask;
+        cv::copyMakeBorder(mask, paddedMask, 7, 7, 32, 32, cv::BORDER_CONSTANT, 0);
+
+        cv::cvtColor(paddedMask, paddedMask, cv::COLOR_GRAY2BGR);
         cv::Mat fused;
-        cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
-        cv::addWeighted(image, 0.5, mask, 0.5, 0.0, fused);
+
+        cv::addWeighted(image, 0.5, paddedMask, 0.5, 0.0, fused);
         return fused;
     }
 

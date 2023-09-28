@@ -73,7 +73,13 @@
         "slist": "cpp",
         "valarray": "cpp",
         "__nullptr": "cpp",
-        "*.txx": "cpp"
+        "*.txx": "cpp",
+        "strstream": "cpp",
+        "cfenv": "cpp",
+        "*.ipp": "cpp",
+        "__locale": "cpp",
+        "filesystem": "cpp",
+        "ios": "cpp"
     },
     "cmake.configureOnOpen": true,
 }

@@ -93,7 +93,8 @@ namespace ORB_SLAM2
         cv::namedWindow("ORB-SLAM2: Inliers");
         cv::namedWindow("ORB-SLAM2: Outliers");
         cv::namedWindow("ORB-SLAM2: InOutliers");
-        cv::namedWindow("ORB-SLAM2: DL Model");
+        cv::namedWindow("ORB-SLAM2: DL Model_small");
+        cv::namedWindow("ORB-SLAM2: DL Model_big");
 
         bool bFollow = true;
         bool bLocalizationMode = false;
@@ -145,12 +146,14 @@ namespace ORB_SLAM2
             cv::Mat imInliers = imVec[1];
             cv::Mat imOutliers = imVec[2];
             cv::Mat imInOutliers = imVec[3];
-            cv::Mat imDL = imVec[4];
+            cv::Mat imDL_small = imVec[4];
+            cv::Mat imDL_big = imVec[5];
             cv::imshow("ORB-SLAM2: Current Frame", im);
             cv::imshow("ORB-SLAM2: Inliers", imInliers);
             cv::imshow("ORB-SLAM2: Outliers", imOutliers);
             cv::imshow("ORB-SLAM2: InOutliers", imInOutliers);
-            cv::imshow("ORB-SLAM2: DL Model", imDL);
+            cv::imshow("ORB-SLAM2: DL Model_small", imDL_small);
+            cv::imshow("ORB-SLAM2: DL Model_big", imDL_big);
             char key = cv::waitKey(mT);
 
             if (key == 'q')
@@ -160,6 +163,8 @@ namespace ORB_SLAM2
                 mpFrameDrawer->outInliers.release();
                 mpFrameDrawer->outOutliers.release();
                 mpFrameDrawer->outInOutliers.release();
+                mpFrameDrawer->outDL_small.release();
+                mpFrameDrawer->outDL_big.release();
 
                 exit(0);
             }

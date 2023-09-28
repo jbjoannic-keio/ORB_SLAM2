@@ -119,7 +119,8 @@ namespace ORB_SLAM2
         grid->createGrid(-10, 10, 1, 1, -30, 30);
 
         // DL Model
-        model = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_script.pt");
+        model_small = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_small_script.pt", false);
+        model_big = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_big_script.pt", true);
     }
 
     cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
@@ -285,9 +286,12 @@ namespace ORB_SLAM2
         // DL Model
         if (!im.empty())
         {
-            cv::Mat mask = model->mask(im);
-            cv::Mat fused = model->fuse(im, mask);
-            mpFrameDrawer->drawDLModel(fused);
+            cv::Mat mask_small = model_small->mask(im);
+            cv::Mat fused_small = model_small->fuse(im, mask_small);
+
+            cv::Mat mask_big = model_big->mask(im);
+            cv::Mat fused_big = model_big->fuse(im, mask_big);
+            mpFrameDrawer->drawDLModel(fused_small, fused_big);
         }
 
         return Tcw;

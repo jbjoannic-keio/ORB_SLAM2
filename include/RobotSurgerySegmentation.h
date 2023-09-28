@@ -14,12 +14,13 @@ namespace ORB_SLAM2
     class RobotSurgerySegmentation
     {
     public:
-        RobotSurgerySegmentation(std::string modelPath);
-        cv::Mat mask(cv::Mat image);
+        RobotSurgerySegmentation(std::string modelPath, bool isBig);
+        cv::Mat mask(cv::Mat imagesrc);
         cv::Mat fuse(cv::Mat image, cv::Mat mask);
 
     private:
         torch::jit::script::Module model;
+        bool isBig;
     };
 } // namespace ORB_SLAM2
 

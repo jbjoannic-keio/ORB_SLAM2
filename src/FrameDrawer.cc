@@ -42,7 +42,8 @@ namespace ORB_SLAM2
         outInliers = cv::VideoWriter(strPath + "results/outputInliers.mp4", fourcc, fps, cv::Size(480, 270));
         outOutliers = cv::VideoWriter(strPath + "results/outputOutliers.mp4", fourcc, fps, cv::Size(480, 270));
         outInOutliers = cv::VideoWriter(strPath + "results/outputInOutliers.mp4", fourcc, fps, cv::Size(480, 270));
-        outDL = cv::VideoWriter(strPath + "results/outputDL.mp4", fourcc, fps, cv::Size(480, 270));
+        outDL_small = cv::VideoWriter(strPath + "results/outputDL_small.mp4", fourcc, fps, cv::Size(480, 270));
+        outDL_big = cv::VideoWriter(strPath + "results/outputDL_big.mp4", fourcc, fps, cv::Size(480, 270));
     }
 
     std::vector<cv::Mat> FrameDrawer::DrawFrame()
@@ -180,7 +181,19 @@ namespace ORB_SLAM2
         }
 
         // DL Model
-        cv::Mat imDL = imgGrid.clone();
+        // if imgDL size == 0, then do not draw
+        cv::Mat imDL_small, imDL_big;
+
+        if (imgDL_small.size() != cv::Size(0, 0))
+        {
+            imDL_small = imgDL_small.clone();
+            imDL_big = imgDL_big.clone();
+        }
+        else
+        {
+            imDL_small = cv::Mat(480, 640, CV_8UC3, cv::Scalar(0, 0, 0));
+            imDL_big = cv::Mat(480, 640, CV_8UC3, cv::Scalar(0, 0, 0));
+        }
 
         cv::Mat imWithInfo;
         DrawTextInfo(im, state, imWithInfo);
@@ -188,7 +201,8 @@ namespace ORB_SLAM2
         vectIm.push_back(imInliers);
         vectIm.push_back(imOutliers);
         vectIm.push_back(imInOutliers);
-        vectIm.push_back(imDL);
+        vectIm.push_back(imDL_small);
+        vectIm.push_back(imDL_big);
         outAll.write(im);
         outInliers.write(imInliers);
         outOutliers.write(imOutliers);
@@ -278,10 +292,12 @@ namespace ORB_SLAM2
         outGrid.write(imgGrid);
     }
 
-    void FrameDrawer::drawDLModel(cv::Mat imDL)
+    void FrameDrawer::drawDLModel(cv::Mat imDL_small, cv::Mat imDL_big)
     {
-        imDL = imDL.clone();
-        outDL.write(imDL);
+        imgDL_small = imDL_small.clone();
+        imgDL_big = imDL_big.clone();
+        outDL_small.write(imgDL_small);
+        outDL_big.write(imgDL_big);
     }
 
 } // namespace ORB_SLAM
