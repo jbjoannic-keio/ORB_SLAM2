@@ -13,7 +13,7 @@ namespace ORB_SLAM2
     {
     public:
         // Constructor, use the setting paths to get the camera parameters
-        ThreeDimensionalFrame(const std::string &strSettingPath, const std::string &strPath);
+        ThreeDimensionalFrame(const std::string &strSettingPath, const std::string &strPath, const bool removeDynamicOutliers = false);
 
         // Create a 3D grid with the given parameters (boundaries of the grid around the camera)
         void createGrid(float x1, float x2, float y1, float y2, float z1, float z2);
@@ -25,7 +25,7 @@ namespace ORB_SLAM2
         void correctGridRotation();
 
         // project the grid into the image plane
-        cv::Mat projectGrid(const cv::Mat &img);
+        cv::Mat projectGrid(const cv::Mat &img, const bool removeDynamicOutliers = false);
 
     private:
         // The grid is stored as a pair of a matrix containing the points of the grid and a vector containing the direction of each line

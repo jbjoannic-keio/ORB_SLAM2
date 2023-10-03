@@ -45,9 +45,9 @@ using namespace std;
 namespace ORB_SLAM2
 {
 
-    Tracking::Tracking(System *pSys, ORBVocabulary *pVoc, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Map *pMap, KeyFrameDatabase *pKFDB, const string &strSettingPath, const int sensor) : mState(NO_IMAGES_YET), mSensor(sensor), mbOnlyTracking(false), mbVO(false), mpORBVocabulary(pVoc),
-                                                                                                                                                                                                  mpKeyFrameDB(pKFDB), mpInitializer(static_cast<Initializer *>(NULL)), mpSystem(pSys), mpViewer(NULL),
-                                                                                                                                                                                                  mpFrameDrawer(pFrameDrawer), mpMapDrawer(pMapDrawer), mpMap(pMap), mnLastRelocFrameId(0)
+    Tracking::Tracking(System *pSys, ORBVocabulary *pVoc, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Map *pMap, KeyFrameDatabase *pKFDB, const string &strSettingPath, const int sensor, const bool removeDynamicOutliers) : mState(NO_IMAGES_YET), mSensor(sensor), mbOnlyTracking(false), mbVO(false), mpORBVocabulary(pVoc),
+                                                                                                                                                                                                                                    mpKeyFrameDB(pKFDB), mpInitializer(static_cast<Initializer *>(NULL)), mpSystem(pSys), mpViewer(NULL),
+                                                                                                                                                                                                                                    mpFrameDrawer(pFrameDrawer), mpMapDrawer(pMapDrawer), mpMap(pMap), mnLastRelocFrameId(0)
     {
         // Load camera parameters from settings file
 
@@ -148,7 +148,11 @@ namespace ORB_SLAM2
             else
                 mDepthMapFactor = 1.0f / mDepthMapFactor;
         }
-        dynamicEraser = new DynamicEraser(mK);
+
+        if (removeDynamicOutliers)
+        {
+            dynamicEraser = new DynamicEraser(mK);
+        }
     }
 
     void Tracking::SetLocalMapper(LocalMapping *pLocalMapper)
@@ -413,6 +417,8 @@ namespace ORB_SLAM2
                 if (bOK && !mbVO)
                     bOK = TrackLocalMap();
             }
+            std::cout << "TCW apres tracklocalmap" << std::endl;
+            std::cout << mCurrentFrame.mTcw << std::endl;
 
             if (bOK)
                 mState = OK;
@@ -895,16 +901,27 @@ namespace ORB_SLAM2
         if (nmatches < 20)
             return false;
 
-        // ICI ON SUPPRIME LES OUTLIERS AVEC LE RANSAC, AFFICHAGE AUSSI SI ON EST CHAUD
-        couplesPoints = dynamicEraser->searchMatchesKeyFrame(mCurrentFrame, mLastFrame);
-        // couplesPointsRansac = dynamicEraser->Ransac(couplesPoints);
-        auto output = dynamicEraser->RealRansac(couplesPoints);
-        couplesPointsRansacInliers = output.first;
-        couplesPointsRansacOutliers = output.second;
+        if (dynamicEraser)
+        {
+            // ICI ON SUPPRIME LES OUTLIERS AVEC LE RANSAC, AFFICHAGE AUSSI SI ON EST CHAUD
+            couplesPoints = dynamicEraser->searchMatchesKeyFrame(mCurrentFrame, mLastFrame);
+            // couplesPointsRansac = dynamicEraser->Ransac(couplesPoints);
+            auto output = dynamicEraser->RealRansac(couplesPoints);
+            couplesPointsRansacInliers = output.first;
+            couplesPointsRansacOutliers = output.second;
+        }
+        // FAUDRAIT CHANGER ICI CERTAINS ARGUMENTS DE FRAME POUR VOIR L7IMPACT FINAL
         //  dynamicEraser->main();
         //  Optimize frame pose with all matches
-        Optimizer::PoseOptimization(&mCurrentFrame);
 
+        std::cout << "avant derniere tcw ?" << std::endl;
+        std::cout << mCurrentFrame.mTcw << std::endl;
+        Optimizer::PoseOptimization(&mCurrentFrame);
+        std::cout << "apres derniere tcw ?" << std::endl;
+        std::cout << mCurrentFrame.mTcw << std::endl;
+
+        std::cout << "outliers" << std::endl;
+        // ca a lair detre les pts non co a la
         // Discard outliers
         int nmatchesMap = 0;
         for (int i = 0; i < mCurrentFrame.N; i++)

@@ -2,7 +2,7 @@
 
 namespace ORB_SLAM2
 {
-    ThreeDimensionalFrame::ThreeDimensionalFrame(const std::string &strSettingPath, const std::string &strPath)
+    ThreeDimensionalFrame::ThreeDimensionalFrame(const std::string &strSettingPath, const std::string &strPath, const bool removeDynamicOutliers)
     {
         cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
         float fx = fSettings["Camera.fx"];
@@ -17,7 +17,12 @@ namespace ORB_SLAM2
         K.at<float>(1, 2) = cy;
         K.copyTo(mK);
 
-        cv::namedWindow("RAW", cv::WINDOW_NORMAL);
+        std::string windowName = "RAW";
+        if (removeDynamicOutliers)
+        {
+            windowName += " Outliers Removed";
+        }
+        cv::namedWindow(windowName, cv::WINDOW_NORMAL);
     };
 
     void ThreeDimensionalFrame::createGrid(float x1, float x2, float y1, float y2, float z1, float z2)
@@ -142,7 +147,7 @@ namespace ORB_SLAM2
         correctedRotationGridPoints = std::make_pair(corrected, correctedLine_direction);
     };
 
-    cv::Mat ThreeDimensionalFrame::projectGrid(const cv::Mat &img)
+    cv::Mat ThreeDimensionalFrame::projectGrid(const cv::Mat &img, const bool removeDynamicOutliers)
     {
         cv::Mat copy;
         if (img.channels() == 1)
@@ -169,7 +174,12 @@ namespace ORB_SLAM2
                 thickness[correctedRotationGridPoints.second[i]]);
         }
 
-        cv::imshow("RAW", copy);
+        std::string windowName = "RAW";
+        if (removeDynamicOutliers)
+        {
+            windowName += " Outliers Removed";
+        }
+        cv::imshow(windowName, copy);
         return copy;
     }
 

@@ -39,7 +39,7 @@ namespace ORB_SLAM2
     class FrameDrawer
     {
     public:
-        FrameDrawer(Map *pMap, const string strPath);
+        FrameDrawer(Map *pMap, const string strPath, const bool removeDynamicOutliers);
 
         // Update info from the last processed frame.
         void Update(Tracking *pTracker);

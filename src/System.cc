@@ -30,8 +30,8 @@
 namespace ORB_SLAM2
 {
 
-    System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const string &strPath, const bool bUseViewer) : mSensor(sensor), mpViewer(static_cast<Viewer *>(NULL)), mbReset(false), mbActivateLocalizationMode(false),
-                                                                                                                                                  mbDeactivateLocalizationMode(false)
+    System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const string &strPath, const bool bUseViewer, const bool removeDynamicOutliers) : mSensor(sensor), mpViewer(static_cast<Viewer *>(NULL)), mbReset(false), mbActivateLocalizationMode(false),
+                                                                                                                                                                                    mbDeactivateLocalizationMode(false)
     {
         // Output welcome message
         cout << endl
@@ -80,13 +80,13 @@ namespace ORB_SLAM2
         mpMap = new Map();
 
         // Create Drawers. These are used by the Viewer
-        mpFrameDrawer = new FrameDrawer(mpMap, strPath);
+        mpFrameDrawer = new FrameDrawer(mpMap, strPath, removeDynamicOutliers);
         mpMapDrawer = new MapDrawer(mpMap, strSettingsFile);
 
         // Initialize the Tracking thread
         //(it will live in the main thread of execution, the one that called this constructor)
         mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
-                                 mpMap, mpKeyFrameDatabase, strSettingsFile, mSensor);
+                                 mpMap, mpKeyFrameDatabase, strSettingsFile, mSensor, removeDynamicOutliers);
 
         // Initialize the Local Mapping thread and launch
         mpLocalMapper = new LocalMapping(mpMap, mSensor == MONOCULAR);
@@ -100,7 +100,7 @@ namespace ORB_SLAM2
         if (bUseViewer)
         {
             mpViewer = new Viewer(this, mpFrameDrawer, mpMapDrawer, mpTracker, strSettingsFile);
-            mptViewer = new thread(&Viewer::Run, mpViewer);
+            mptViewer = new thread(&Viewer::Run, mpViewer, removeDynamicOutliers);
             mpTracker->SetViewer(mpViewer);
         }
 
@@ -115,12 +115,19 @@ namespace ORB_SLAM2
         mpLoopCloser->SetLocalMapper(mpLocalMapper);
 
         // 3dGRID
-        grid = new ThreeDimensionalFrame(strSettingsFile, strPath);
+        grid = new ThreeDimensionalFrame(strSettingsFile, strPath, removeDynamicOutliers);
         grid->createGrid(-10, 10, 1, 1, -30, 30);
 
         // DL Model
-        model_small = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_small_script.pt", false);
-        model_big = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_big_script.pt", true);
+        if (removeDynamicOutliers)
+        {
+
+            std::cout << "Loading DL model..." << std::endl;
+            model_small = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_small_script.pt", false);
+            model_big = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_big_script.pt", true);
+        }
+        if (model_small)
+            std::cout << "DL model loaded!" << std::endl;
     }
 
     cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
@@ -276,7 +283,7 @@ namespace ORB_SLAM2
             grid->computeGridRotation(Tcw);
             grid->correctGridRotation();
 
-            mpFrameDrawer->gridActualize(grid->projectGrid(im));
+            mpFrameDrawer->gridActualize(grid->projectGrid(im, model_small));
         }
         unique_lock<mutex> lock2(mMutexState);
         mTrackingState = mpTracker->mState;
@@ -284,7 +291,7 @@ namespace ORB_SLAM2
         mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
 
         // DL Model
-        if (!im.empty())
+        if (!im.empty() && model_small)
         {
             cv::Mat mask_small = model_small->mask(im);
             cv::Mat fused_small = model_small->fuse(im, mask_small);
@@ -346,7 +353,14 @@ namespace ORB_SLAM2
         }
 
         if (mpViewer)
-            pangolin::BindToContext("ORB-SLAM2: Map Viewer");
+        {
+            std::string windowTitle = "ORB-SLAM2: Map Viewer";
+            if (model_small) // if dynamic
+            {
+                windowTitle += " Outliers Removed";
+            }
+            pangolin::BindToContext(windowTitle);
+        }
     }
 
     void System::SaveTrajectoryTUM(const string &filename)

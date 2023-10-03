@@ -4,15 +4,15 @@ namespace ORB_SLAM2
 {
     DynamicEraser::DynamicEraser(cv::Mat mK)
     {
-        std::cout << "DynamicEraser::DynamicEraser" << std::endl;
+        // std::cout << "DynamicEraser::DynamicEraser" << std::endl;
         DynamicEraser::K = mK;
     };
 
     std::vector<std::pair<cv::Point2f, cv::Point2f>> DynamicEraser::searchMatchesKeyFrame(Frame &CurrentFrame, Frame &LastFrame)
     {
-        std::cout << "DynamicEraser::Erase" << std::endl;
-        std::cout << "CurrentFrame.timestamp = " << CurrentFrame.mTimeStamp << std::endl;
-        std::cout << "LastFrame.timestamp = " << LastFrame.mTimeStamp << std::endl;
+        // std::cout << "DynamicEraser::Erase" << std::endl;
+        // std::cout << "CurrentFrame.timestamp = " << CurrentFrame.mTimeStamp << std::endl;
+        // std::cout << "LastFrame.timestamp = " << LastFrame.mTimeStamp << std::endl;
 
         std::vector<std::pair<cv::Point2f, cv::Point2f>> matches;
         for (int i = 0; i < CurrentFrame.N; i++)
@@ -28,7 +28,7 @@ namespace ORB_SLAM2
                 {
                     cv::Point2f ptCurrent, ptLast;
                     // std::cout << "i = " << i << std::endl;
-                    std::cout << "pMP->Observations() = " << pMP->Observations() << std::endl;
+                    /////std::cout << "pMP->Observations() = " << pMP->Observations() << std::endl;
                     if (pMP->GetObservations().size() < 1)
                         continue;
 
@@ -105,7 +105,7 @@ namespace ORB_SLAM2
 
     cv::Mat DynamicEraser::computeFundamental(std::pair<cv::Mat, cv::Mat> matchesMatrix, std::vector<int> whichPoints)
     {
-        std::cout << "DynamicEraser::computeFundamental" << std::endl;
+        // std::cout << "DynamicEraser::computeFundamental" << std::endl;
 
         int count = 0;
         for (int i = 0; i < whichPoints.size(); i++)
@@ -134,14 +134,14 @@ namespace ORB_SLAM2
         // cv::sfm::normalizedEightPointSolver(subsetLast.t(), subsetCurrent.t(), F);
         // std::cout << subsetLast.t() << std::endl;
         // std::cout << subsetCurrent.t() << std::endl;
-        std::cout << "fin fundamental F = " << std::endl
-                  << F << std::endl;
+        // std::cout << "fin fundamental F = " << std::endl
+        //          << F << std::endl;
         return F;
     }
 
     std::vector<float> DynamicEraser::computeVector(cv::Mat F, cv::Mat mK)
     {
-        std::cout << "debut vectorisation" << std::endl;
+        // std::cout << "debut vectorisation" << std::endl;
         cv::Mat E;
         cv::Mat R = cv::Mat::zeros(3, 3, CV_32F); // FAUT METTRE DE|S VECTORS ?????
         cv::Mat T = cv::Mat::zeros(1, 3, CV_32F);
@@ -156,30 +156,30 @@ namespace ORB_SLAM2
         {
             Rotations.push_back(cv::Mat::zeros(3, 1, CV_64F));
         }
-        std::cout << "mid" << std::endl;
+        // std::cout << "mid" << std::endl;
         cv::sfm::essentialFromFundamental(F, K, K, E);
-        std::cout << "mid2" << std::endl;
+        // std::cout << "mid2" << std::endl;
 
         cv::sfm::motionFromEssential(E, Rotations, Translations);
-        std::cout << "mid3" << std::endl;
+        // std::cout << "mid3" << std::endl;
 
-        std::cout << "F =" << std::endl
-                  << F << std::endl;
-        std::cout << "K =" << std::endl
-                  << K << std::endl;
-        std::cout << "E =" << std::endl
-                  << E << std::endl;
+        // std::cout << "F =" << std::endl
+        //            << F << std::endl;
+        //  std::cout << "K =" << std::endl
+        //            << K << std::endl;
+        //  std::cout << "E =" << std::endl
+        //            << E << std::endl;
         for (int i = 0; i < 4; i++)
         {
             std::cout << Rotations[i] << std::endl;
             std::cout << Translations[i] << std::endl;
         }
         cv::Mat vecR(1, 3, CV_32F);
-        std::cout << "mid#" << std::endl;
+        // std::cout << "mid#" << std::endl;
 
         std::vector<float> vec(6);
         cv::Rodrigues(Rotations[0], vecR);
-        std::cout << "vecR = " << std::endl;
+        // std::cout << "vecR = " << std::endl;
         for (int i = 0; i < 3; i++)
         {
             std::cout << vecR.at<float>(i) << "  ";
@@ -195,8 +195,8 @@ namespace ORB_SLAM2
         {
             std::cout << vec[i] << "  ";
         }
-        std::cout << std::endl;
-        std::cout << "fin vectorisation" << std::endl;
+        // std::cout << std::endl;
+        // std::cout << "fin vectorisation" << std::endl;
         return vec;
     }
 
@@ -212,12 +212,12 @@ namespace ORB_SLAM2
 
     std::vector<std::pair<cv::Point2f, cv::Point2f>> DynamicEraser::Ransac(std::vector<std::pair<cv::Point2f, cv::Point2f>> matches)
     {
-        std::cout << "RANSAC" << std::endl;
+        // std::cout << "RANSAC" << std::endl;
         std::pair<cv::Mat, cv::Mat> matchesMatrix = DynamicEraser::convertToMatrix(matches);
-        std::cout << "matrixed" << std::endl;
-        // std::vector<int> whichPoints = {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0}; // normalement taille de  laliste des matches mais on peut sarreter avant
-        // cv::Mat F = DynamicEraser::computeFundamental(matchesMatrix, whichPoints);
-        // std::vector<float> vec = DynamicEraser::computeVector(F);
+        // std::cout << "matrixed" << std::endl;
+        //  std::vector<int> whichPoints = {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0}; // normalement taille de  laliste des matches mais on peut sarreter avant
+        //  cv::Mat F = DynamicEraser::computeFundamental(matchesMatrix, whichPoints);
+        //  std::vector<float> vec = DynamicEraser::computeVector(F);
         int iterMax = 1;            // nombre de fois qu'on fait le ransac
         float thresholdOutlier = 1; // seuil de distance outlier
         int iter = 0;
@@ -226,24 +226,24 @@ namespace ORB_SLAM2
         while (iter < iterMax)
         {
             std::vector<int> whichPoints = DynamicEraser::randomWhichPoints(matches.size());
-            std::cout << "randomize" << std::endl;
+            // std::cout << "randomize" << std::endl;
             cv::Mat F = DynamicEraser::computeFundamental(matchesMatrix, whichPoints);
-            std::cout << "Fundamental" << std::endl;
+            // std::cout << "Fundamental" << std::endl;
             std::vector<float> vec = DynamicEraser::computeVector(F, K);
-            std::cout << "vector" << std::endl;
-            std::cout << "size " << whichPoints.size() << std::endl;
+            // std::cout << "vector" << std::endl;
+            // std::cout << "size " << whichPoints.size() << std::endl;
             for (int i = 0; i < whichPoints.size(); i++)
             {
                 if (whichPoints[i] == 0)
                 {
                     whichPoints[i] = 1;
-                    std::cout << "deb i=0 boucle n " << i << std::endl;
+                    // std::cout << "deb i=0 boucle n " << i << std::endl;
                     cv::Mat FProvisoire = DynamicEraser::computeFundamental(matchesMatrix, whichPoints);
-                    std::cout << "Fundamental 2 boucle n " << i << std::endl;
+                    // std::cout << "Fundamental 2 boucle n " << i << std::endl;
                     std::vector<float> vecProvisoire = DynamicEraser::computeVector(FProvisoire, K);
-                    std::cout << "vector 2 boucle n " << i << std::endl;
+                    // std::cout << "vector 2 boucle n " << i << std::endl;
                     float distance = DynamicEraser::computeDistance(vec, vecProvisoire);
-                    std::cout << "distance 2 boucle n " << i << std::endl;
+                    // std::cout << "distance 2 boucle n " << i << std::endl;
                     if (distance > thresholdOutlier)
                     {
                         whichPoints[i] = 0;
@@ -262,7 +262,7 @@ namespace ORB_SLAM2
             {
                 bestInliersNumber = count;
                 bestWhichPoints = std::vector<int>(whichPoints);
-                std::cout << "bestInliersNumber : " << bestInliersNumber << std::endl;
+                // std::cout << "bestInliersNumber : " << bestInliersNumber << std::endl;
             }
             iter++;
         }
@@ -280,16 +280,16 @@ namespace ORB_SLAM2
 
     std::pair<std::vector<std::pair<cv::Point2f, cv::Point2f>>, std::vector<std::pair<cv::Point2f, cv::Point2f>>> DynamicEraser::RealRansac(std::vector<std::pair<cv::Point2f, cv::Point2f>> matches)
     {
-        std::cout << "RANSAC" << std::endl;
+        // std::cout << "RANSAC" << std::endl;
         std::pair<cv::Mat, cv::Mat> matchesMatrix = DynamicEraser::convertToMatrix(matches);
-        std::cout << "matrixed" << std::endl;
+        // std::cout << "matrixed" << std::endl;
         cv::Mat mask;
         cv::Mat F = cv::findFundamentalMat(matchesMatrix.first, matchesMatrix.second, cv::FM_RANSAC, 3, 0.99, mask);
-        std::cout << "Fundamental" << std::endl;
+        // std::cout << "Fundamental" << std::endl;
         std::cout << F << std::endl;
-        std::cout << "Fundamental" << std::endl;
+        // std::cout << "Fundamental" << std::endl;
         std::cout << mask << std::endl;
-        std::cout << "mask" << std::endl;
+        // std::cout << "mask" << std::endl;
         std::vector<std::pair<cv::Point2f, cv::Point2f>> outliers;
         std::vector<std::pair<cv::Point2f, cv::Point2f>> inliers;
         for (int i = 0; i < mask.rows; i++)

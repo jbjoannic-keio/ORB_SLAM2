@@ -60,7 +60,7 @@ namespace ORB_SLAM2
 
     public:
         // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
-        System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const string &strPath, const bool bUseViewer = true);
+        System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const string &strPath, const bool bUseViewer = true, const bool removeDynamicOutliers = false);
 
         // Proccess the given stereo frame. Images must be synchronized and rectified.
         // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
@@ -179,8 +179,8 @@ namespace ORB_SLAM2
         ThreeDimensionalFrame *grid;
 
         // DL Model
-        RobotSurgerySegmentation *model_small;
-        RobotSurgerySegmentation *model_big;
+        RobotSurgerySegmentation *model_small = nullptr;
+        RobotSurgerySegmentation *model_big = nullptr;
     };
 
 } // namespace ORB_SLAM

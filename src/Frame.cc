@@ -188,6 +188,8 @@ namespace ORB_SLAM2
         // ORB extraction
         ExtractORB(0, imGray);
 
+        // ICI FAUT METTRE LE CODE POUR ENLEVER LES OUTLIERS
+
         N = mvKeys.size();
 
         if (mvKeys.empty())

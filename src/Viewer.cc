@@ -54,12 +54,17 @@ namespace ORB_SLAM2
         mViewpointF = fSettings["Viewer.ViewpointF"];
     }
 
-    void Viewer::Run()
+    void Viewer::Run(const bool removeDynamicOutliers)
     {
         mbFinished = false;
         mbStopped = false;
 
-        pangolin::CreateWindowAndBind("ORB-SLAM2: Map Viewer", 1024, 768);
+        std::string windowTitlePangolin = "ORB-SLAM2: Map Viewer";
+        if (removeDynamicOutliers)
+        {
+            windowTitlePangolin += " Outliers Removed";
+        }
+        pangolin::CreateWindowAndBind(windowTitlePangolin, 1024, 768);
 
         // 3D Mouse handler requires depth testing to be enabled
         glEnable(GL_DEPTH_TEST);
@@ -89,12 +94,21 @@ namespace ORB_SLAM2
         pangolin::OpenGlMatrix Twc;
         Twc.SetIdentity();
 
-        cv::namedWindow("ORB-SLAM2: Current Frame");
-        cv::namedWindow("ORB-SLAM2: Inliers");
-        cv::namedWindow("ORB-SLAM2: Outliers");
-        cv::namedWindow("ORB-SLAM2: InOutliers");
-        cv::namedWindow("ORB-SLAM2: DL Model_small");
-        cv::namedWindow("ORB-SLAM2: DL Model_big");
+        std::string windowTitle = "ORB-SLAM2: Current Frame";
+        if (removeDynamicOutliers)
+        {
+            windowTitle += " Outliers Removed";
+        }
+        cv::namedWindow(windowTitle, cv::WINDOW_AUTOSIZE);
+
+        if (removeDynamicOutliers)
+        {
+            cv::namedWindow("ORB-SLAM2: Inliers");
+            cv::namedWindow("ORB-SLAM2: Outliers");
+            cv::namedWindow("ORB-SLAM2: InOutliers");
+            cv::namedWindow("ORB-SLAM2: DL Model_small");
+            cv::namedWindow("ORB-SLAM2: DL Model_big");
+        }
 
         bool bFollow = true;
         bool bLocalizationMode = false;
@@ -148,23 +162,39 @@ namespace ORB_SLAM2
             cv::Mat imInOutliers = imVec[3];
             cv::Mat imDL_small = imVec[4];
             cv::Mat imDL_big = imVec[5];
-            cv::imshow("ORB-SLAM2: Current Frame", im);
-            cv::imshow("ORB-SLAM2: Inliers", imInliers);
-            cv::imshow("ORB-SLAM2: Outliers", imOutliers);
-            cv::imshow("ORB-SLAM2: InOutliers", imInOutliers);
-            cv::imshow("ORB-SLAM2: DL Model_small", imDL_small);
-            cv::imshow("ORB-SLAM2: DL Model_big", imDL_big);
+            cv::imshow(windowTitle, im);
+            if (removeDynamicOutliers)
+            {
+                std::cout << "imInliers.size() = " << imInliers.size() << std::endl;
+                cv::imshow("ORB-SLAM2: Inliers", imInliers);
+                std::cout << "imOutliers.size() = " << imOutliers.size() << std::endl;
+                cv::imshow("ORB-SLAM2: Outliers", imOutliers);
+                std::cout << "imInOutliers.size() = " << imInOutliers.size() << std::endl;
+                cv::imshow("ORB-SLAM2: InOutliers", imInOutliers);
+
+                if (imDL_small.size().width > 0)
+                {
+                    cv::imshow("ORB-SLAM2: DL Model_small", imDL_small);
+
+                    cv::imshow("ORB-SLAM2: DL Model_big", imDL_big);
+                }
+            }
+
             char key = cv::waitKey(mT);
 
             if (key == 'q')
             {
                 mpFrameDrawer->outGrid.release();
                 mpFrameDrawer->outAll.release();
-                mpFrameDrawer->outInliers.release();
-                mpFrameDrawer->outOutliers.release();
-                mpFrameDrawer->outInOutliers.release();
-                mpFrameDrawer->outDL_small.release();
-                mpFrameDrawer->outDL_big.release();
+
+                if (removeDynamicOutliers)
+                {
+                    mpFrameDrawer->outInliers.release();
+                    mpFrameDrawer->outOutliers.release();
+                    mpFrameDrawer->outInOutliers.release();
+                    mpFrameDrawer->outDL_small.release();
+                    mpFrameDrawer->outDL_big.release();
+                }
 
                 exit(0);
             }

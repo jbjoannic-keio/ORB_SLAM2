@@ -29,7 +29,7 @@
 namespace ORB_SLAM2
 {
 
-    FrameDrawer::FrameDrawer(Map *pMap, const string strPath) : mpMap(pMap)
+    FrameDrawer::FrameDrawer(Map *pMap, const string strPath, const bool removeDynamicOutliers) : mpMap(pMap)
     {
         mState = Tracking::SYSTEM_NOT_READY;
         mIm = cv::Mat(480, 640, CV_8UC3, cv::Scalar(0, 0, 0));
@@ -37,13 +37,16 @@ namespace ORB_SLAM2
         int fourcc = cv::VideoWriter::fourcc('m', 'p', '4', 'v');
         double fps = 30.0;
 
-        outGrid = cv::VideoWriter(strPath + "results/outputGrid.mp4", fourcc, fps, cv::Size(480, 270));
-        outAll = cv::VideoWriter(strPath + "results/outputAll.mp4", fourcc, fps, cv::Size(480, 270));
-        outInliers = cv::VideoWriter(strPath + "results/outputInliers.mp4", fourcc, fps, cv::Size(480, 270));
-        outOutliers = cv::VideoWriter(strPath + "results/outputOutliers.mp4", fourcc, fps, cv::Size(480, 270));
-        outInOutliers = cv::VideoWriter(strPath + "results/outputInOutliers.mp4", fourcc, fps, cv::Size(480, 270));
-        outDL_small = cv::VideoWriter(strPath + "results/outputDL_small.mp4", fourcc, fps, cv::Size(480, 270));
-        outDL_big = cv::VideoWriter(strPath + "results/outputDL_big.mp4", fourcc, fps, cv::Size(480, 270));
+        outGrid = cv::VideoWriter(strPath + "results/outputGrid" + (removeDynamicOutliers ? "_removed" : "") + ".mp4", fourcc, fps, cv::Size(480, 270));
+        outAll = cv::VideoWriter(strPath + "results/outputAll" + (removeDynamicOutliers ? "_removed" : "") + ".mp4", fourcc, fps, cv::Size(480, 270));
+        if (removeDynamicOutliers)
+        {
+            outInliers = cv::VideoWriter(strPath + "results/outputInliers.mp4", fourcc, fps, cv::Size(480, 270));
+            outOutliers = cv::VideoWriter(strPath + "results/outputOutliers.mp4", fourcc, fps, cv::Size(480, 270));
+            outInOutliers = cv::VideoWriter(strPath + "results/outputInOutliers.mp4", fourcc, fps, cv::Size(480, 270));
+            outDL_small = cv::VideoWriter(strPath + "results/outputDL_small.mp4", fourcc, fps, cv::Size(480, 270));
+            outDL_big = cv::VideoWriter(strPath + "results/outputDL_big.mp4", fourcc, fps, cv::Size(480, 270));
+        }
     }
 
     std::vector<cv::Mat> FrameDrawer::DrawFrame()
@@ -64,6 +67,7 @@ namespace ORB_SLAM2
                 mState = Tracking::NO_IMAGES_YET;
 
             mIm.copyTo(im);
+
             mIm.copyTo(imInliers);
             mIm.copyTo(imOutliers);
             mIm.copyTo(imInOutliers);
@@ -175,7 +179,6 @@ namespace ORB_SLAM2
             {
                 cv::arrowedLine(imInOutliers, mvCurrentMatchesRansacOutliers[j].first, mvCurrentMatchesRansacOutliers[j].second, cv::Scalar(0, 0, 255));
             }
-
             // matplotlibcpp::scatter(deltaX, deltaY);
             // matplotlibcpp::show();
         }
@@ -189,11 +192,6 @@ namespace ORB_SLAM2
             imDL_small = imgDL_small.clone();
             imDL_big = imgDL_big.clone();
         }
-        else
-        {
-            imDL_small = cv::Mat(480, 640, CV_8UC3, cv::Scalar(0, 0, 0));
-            imDL_big = cv::Mat(480, 640, CV_8UC3, cv::Scalar(0, 0, 0));
-        }
 
         cv::Mat imWithInfo;
         DrawTextInfo(im, state, imWithInfo);
@@ -204,9 +202,12 @@ namespace ORB_SLAM2
         vectIm.push_back(imDL_small);
         vectIm.push_back(imDL_big);
         outAll.write(im);
-        outInliers.write(imInliers);
-        outOutliers.write(imOutliers);
-        outInOutliers.write(imInOutliers);
+        if (mvCurrentMatches.size() > 0)
+        {
+            outInliers.write(imInliers);
+            outOutliers.write(imOutliers);
+            outInOutliers.write(imInOutliers);
+        }
         return vectIm;
     }
 
@@ -281,9 +282,14 @@ namespace ORB_SLAM2
         }
         mState = static_cast<int>(pTracker->mLastProcessedState);
 
-        mvCurrentMatches = pTracker->couplesPoints;
-        mvCurrentMatchesRansacInliers = pTracker->couplesPointsRansacInliers;
-        mvCurrentMatchesRansacOutliers = pTracker->couplesPointsRansacOutliers;
+        if (pTracker->couplesPoints.size() > 0)
+        {
+            mvCurrentMatches = pTracker->couplesPoints;
+            mvCurrentMatchesRansacInliers = pTracker->couplesPointsRansacInliers;
+            mvCurrentMatchesRansacOutliers = pTracker->couplesPointsRansacOutliers;
+        }
+
+        // on va mettre ic le dl
     }
 
     void FrameDrawer::gridActualize(cv::Mat grid)
@@ -296,8 +302,11 @@ namespace ORB_SLAM2
     {
         imgDL_small = imDL_small.clone();
         imgDL_big = imDL_big.clone();
-        outDL_small.write(imgDL_small);
-        outDL_big.write(imgDL_big);
+        if (outDL_small.isOpened())
+        {
+            outDL_small.write(imgDL_small);
+            outDL_big.write(imgDL_big);
+        }
     }
 
 } // namespace ORB_SLAM
