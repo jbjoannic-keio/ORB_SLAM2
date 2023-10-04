@@ -25,7 +25,7 @@ namespace ORB_SLAM2
         void correctGridRotation();
 
         // project the grid into the image plane
-        cv::Mat projectGrid(const cv::Mat &img, const bool removeDynamicOutliers = false);
+        cv::Mat projectGrid(const cv::Mat &img, const bool removeDynamicOutliers = false, const bool isFusedGrid = false);
 
     private:
         // The grid is stored as a pair of a matrix containing the points of the grid and a vector containing the direction of each line

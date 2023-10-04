@@ -216,10 +216,16 @@ namespace ORB_SLAM2
         // Dynamic env point Eraser
         DynamicEraser *dynamicEraser;
 
+        cv::Mat mDLMask;
+
     public:
         std::vector<std::pair<cv::Point2f, cv::Point2f>> couplesPoints;
         std::vector<std::pair<cv::Point2f, cv::Point2f>> couplesPointsRansacInliers;
         std::vector<std::pair<cv::Point2f, cv::Point2f>> couplesPointsRansacOutliers;
+
+
+        std::vector<bool> removeDynamicOutliersMask;
+        void setDLMask(const cv::Mat &mask);
     };
 
 } // namespace ORB_SLAM

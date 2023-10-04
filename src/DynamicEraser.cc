@@ -20,7 +20,7 @@ namespace ORB_SLAM2
         {
             // continue; /////////////////////////////////?              ERASE DAT
 
-            if (CurrentFrame.mvpMapPoints[i])
+            if (CurrentFrame.mvpMapPoints[i] && !CurrentFrame.mvbDynamicOutlier[i])
             {
                 MapPoint *pMP = CurrentFrame.mvpMapPoints[i];
 

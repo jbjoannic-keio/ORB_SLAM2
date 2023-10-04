@@ -274,6 +274,20 @@ namespace ORB_SLAM2
             }
         }
 
+        // DL Model
+        cv::Mat mask_big;
+        if (!im.empty() && model_small)
+        {
+            cv::Mat mask_small = model_small->mask(im);
+            cv::Mat fused_small = model_small->fuse(im, mask_small);
+
+            mask_big = model_big->mask(im);
+            cv::Mat fused_big = model_big->fuse(im, mask_big);
+            mpFrameDrawer->drawDLModel(fused_small, fused_big);
+        }
+
+        mpTracker->setDLMask(mask_big);
+
         cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp);
         std::cout << "Tcw final: " << Tcw << std::endl
                   << std::endl;
@@ -282,24 +296,13 @@ namespace ORB_SLAM2
         {
             grid->computeGridRotation(Tcw);
             grid->correctGridRotation();
-
-            mpFrameDrawer->gridActualize(grid->projectGrid(im, model_small));
+            mCurrentGrid = grid->projectGrid(im, model_small);
+            mpFrameDrawer->gridActualize(mCurrentGrid);
         }
         unique_lock<mutex> lock2(mMutexState);
         mTrackingState = mpTracker->mState;
         mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
         mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
-
-        // DL Model
-        if (!im.empty() && model_small)
-        {
-            cv::Mat mask_small = model_small->mask(im);
-            cv::Mat fused_small = model_small->fuse(im, mask_small);
-
-            cv::Mat mask_big = model_big->mask(im);
-            cv::Mat fused_big = model_big->fuse(im, mask_big);
-            mpFrameDrawer->drawDLModel(fused_small, fused_big);
-        }
 
         return Tcw;
     }

@@ -78,6 +78,8 @@ namespace ORB_SLAM2
         std::vector<std::pair<cv::Point2f, cv::Point2f>> mvCurrentMatchesRansacInliers;
         std::vector<std::pair<cv::Point2f, cv::Point2f>> mvCurrentMatchesRansacOutliers;
 
+        std::vector<bool> removeDynamicOutliersMask;
+
         // DL
         cv::Mat imgDL_small;
         cv::Mat imgDL_big;

@@ -147,7 +147,7 @@ namespace ORB_SLAM2
         correctedRotationGridPoints = std::make_pair(corrected, correctedLine_direction);
     };
 
-    cv::Mat ThreeDimensionalFrame::projectGrid(const cv::Mat &img, const bool removeDynamicOutliers)
+    cv::Mat ThreeDimensionalFrame::projectGrid(const cv::Mat &img, const bool removeDynamicOutliers, const bool isFusedGrid)
     {
         cv::Mat copy;
         if (img.channels() == 1)
@@ -156,7 +156,7 @@ namespace ORB_SLAM2
             copy = img.clone();
 
         Eigen::Map<Eigen::Matrix3f> mKEigen(mK.ptr<float>(), 3, 3);
-        std::vector<cv::Scalar> colors = {cv::Scalar(100, 100, 100), cv::Scalar(255, 255, 255), cv::Scalar(100, 150, 0)};
+        std::vector<cv::Scalar> colors = {cv::Scalar(100, 100, 100), cv::Scalar(255, 255, 255), removeDynamicOutliers ? cv::Scalar(100, 0, 150) : cv::Scalar(100, 150, 0)};
         std::vector<int> thickness = {1, 1, 2};
 
         projectedGridPoints = Eigen::MatrixX3f(correctedRotationGridPoints.first.rows(), 3);
@@ -179,7 +179,11 @@ namespace ORB_SLAM2
         {
             windowName += " Outliers Removed";
         }
-        cv::imshow(windowName, copy);
+        if (!isFusedGrid)
+        {
+            if (copy.size().width > 0 && copy.size().height > 0)
+                cv::imshow(windowName, copy);
+        }
         return copy;
     }
 

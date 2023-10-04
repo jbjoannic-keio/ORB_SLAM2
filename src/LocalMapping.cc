@@ -298,6 +298,9 @@ namespace ORB_SLAM2
                 const float kp2_ur = pKF2->mvuRight[idx2];
                 bool bStereo2 = kp2_ur >= 0;
 
+                if (mpCurrentKeyFrame->mvbDynamicOutlier[idx1] || pKF2->mvbDynamicOutlier[idx2])
+                    continue;
+
                 // Check parallax between rays
                 cv::Mat xn1 = (cv::Mat_<float>(3, 1) << (kp1.pt.x - cx1) * invfx1, (kp1.pt.y - cy1) * invfy1, 1.0);
                 cv::Mat xn2 = (cv::Mat_<float>(3, 1) << (kp2.pt.x - cx2) * invfx2, (kp2.pt.y - cy2) * invfy2, 1.0);

@@ -45,20 +45,21 @@ namespace ORB_SLAM2
         outputImage.convertTo(outputImage, CV_8U);
         // resize anyway
         cv::resize(outputImage, outputImage, cv::Size(416, 256));
-        return outputImage;
+
+        cv::Mat paddedMask;
+        cv::copyMakeBorder(outputImage, paddedMask, 7, 7, 32, 32, cv::BORDER_CONSTANT, 0);
+        // juste pour tester on rempli le mask a gauche de 255 et de 0 a droite
+        // paddedMask = cv::Mat::zeros(270, 480, CV_8UC1);
+        // cv::rectangle(paddedMask, cv::Point(0, 0), cv::Point(240, 270), cv::Scalar(255), -1);
+        return paddedMask;
     }
 
     cv::Mat RobotSurgerySegmentation::fuse(cv::Mat image, cv::Mat mask)
     {
-
-        // add zero padding to mask to match image size
-        cv::Mat paddedMask;
-        cv::copyMakeBorder(mask, paddedMask, 7, 7, 32, 32, cv::BORDER_CONSTANT, 0);
-
-        cv::cvtColor(paddedMask, paddedMask, cv::COLOR_GRAY2BGR);
+        cv::cvtColor(mask, mask, cv::COLOR_GRAY2BGR);
         cv::Mat fused;
 
-        cv::addWeighted(image, 0.5, paddedMask, 0.5, 0.0, fused);
+        cv::addWeighted(image, 0.5, mask, 0.5, 0.0, fused);
         return fused;
     }
 

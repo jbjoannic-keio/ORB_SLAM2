@@ -175,12 +175,15 @@ namespace ORB_SLAM2
         std::vector<cv::KeyPoint> mTrackedKeyPointsUn;
         std::mutex mMutexState;
 
-        // 3D GRID
-        ThreeDimensionalFrame *grid;
-
         // DL Model
         RobotSurgerySegmentation *model_small = nullptr;
         RobotSurgerySegmentation *model_big = nullptr;
+
+    public:
+        // 3D GRID
+        ThreeDimensionalFrame *grid;
+
+        cv::Mat mCurrentGrid;
     };
 
 } // namespace ORB_SLAM

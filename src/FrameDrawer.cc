@@ -287,6 +287,7 @@ namespace ORB_SLAM2
             mvCurrentMatches = pTracker->couplesPoints;
             mvCurrentMatchesRansacInliers = pTracker->couplesPointsRansacInliers;
             mvCurrentMatchesRansacOutliers = pTracker->couplesPointsRansacOutliers;
+            removeDynamicOutliersMask = pTracker->removeDynamicOutliersMask;
         }
 
         // on va mettre ic le dl

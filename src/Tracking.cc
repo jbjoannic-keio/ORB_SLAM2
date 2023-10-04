@@ -282,6 +282,26 @@ namespace ORB_SLAM2
 
         mLastProcessedState = mState;
 
+        // on retire les points qui sont dans les mDLMask
+        if (mDLMask.size().width != 0)
+        {
+
+            for (int i = 0; i < mCurrentFrame.mvKeys.size(); i++)
+            {
+                cv::KeyPoint kp = mCurrentFrame.mvKeysUn[i];
+                std::cout << "keypoint" << kp.pt.x << " " << kp.pt.y << mDLMask.size() << std::endl;
+                if (mDLMask.at<uchar>(kp.pt.y, kp.pt.x) == 255 /* || kp.pt.x > 100*/)
+
+                {
+                    std::cout << "on retire le point" << std::endl;
+                    std::cout << "i" << i << std::endl;
+                    std::cout << mCurrentFrame.mvbDynamicOutlier.size() << std::endl;
+                    mCurrentFrame.mvbDynamicOutlier[i] = true;
+                }
+            }
+            removeDynamicOutliersMask = mCurrentFrame.mvbDynamicOutlier;
+        }
+
         // Get Map Mutex -> Map cannot be changed
         unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
 
@@ -1603,6 +1623,11 @@ namespace ORB_SLAM2
     void Tracking::InformOnlyTracking(const bool &flag)
     {
         mbOnlyTracking = flag;
+    }
+
+    void Tracking::setDLMask(const cv::Mat &mask)
+    {
+        mDLMask = mask.clone();
     }
 
 } // namespace ORB_SLAM

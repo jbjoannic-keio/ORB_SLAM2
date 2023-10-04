@@ -44,7 +44,7 @@ namespace ORB_SLAM2
           mvKeysRight(frame.mvKeysRight), mvKeysUn(frame.mvKeysUn), mvuRight(frame.mvuRight),
           mvDepth(frame.mvDepth), mBowVec(frame.mBowVec), mFeatVec(frame.mFeatVec),
           mDescriptors(frame.mDescriptors.clone()), mDescriptorsRight(frame.mDescriptorsRight.clone()),
-          mvpMapPoints(frame.mvpMapPoints), mvbOutlier(frame.mvbOutlier), mnId(frame.mnId),
+          mvpMapPoints(frame.mvpMapPoints), mvbOutlier(frame.mvbOutlier), mvbDynamicOutlier(frame.mvbDynamicOutlier), mnId(frame.mnId),
           mpReferenceKF(frame.mpReferenceKF), mnScaleLevels(frame.mnScaleLevels),
           mfScaleFactor(frame.mfScaleFactor), mfLogScaleFactor(frame.mfLogScaleFactor),
           mvScaleFactors(frame.mvScaleFactors), mvInvScaleFactors(frame.mvInvScaleFactors),
@@ -91,6 +91,7 @@ namespace ORB_SLAM2
 
         mvpMapPoints = vector<MapPoint *>(N, static_cast<MapPoint *>(NULL));
         mvbOutlier = vector<bool>(N, false);
+        mvbDynamicOutlier = vector<bool>(N, false);
 
         // This is done only for the first Frame (or after a change in the calibration)
         if (mbInitialComputations)
@@ -145,6 +146,7 @@ namespace ORB_SLAM2
 
         mvpMapPoints = vector<MapPoint *>(N, static_cast<MapPoint *>(NULL));
         mvbOutlier = vector<bool>(N, false);
+        mvbDynamicOutlier = vector<bool>(N, false);
 
         // This is done only for the first Frame (or after a change in the calibration)
         if (mbInitialComputations)
@@ -203,6 +205,7 @@ namespace ORB_SLAM2
 
         mvpMapPoints = vector<MapPoint *>(N, static_cast<MapPoint *>(NULL));
         mvbOutlier = vector<bool>(N, false);
+        mvbDynamicOutlier = vector<bool>(N, false);
         // This is done only for the first Frame (or after a change in the calibration)
         if (mbInitialComputations)
         {

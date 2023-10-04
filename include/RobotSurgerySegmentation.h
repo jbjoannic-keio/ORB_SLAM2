@@ -8,6 +8,7 @@
 #include <torch/script.h>
 #include <filesystem>
 #include <vector>
+#include "Frame.h"
 
 namespace ORB_SLAM2
 {

@@ -275,10 +275,10 @@ namespace ORB_SLAM2
             for (int i = 0; i < N; i++)
             {
                 MapPoint *pMP = pFrame->mvpMapPoints[i];
-                if (pMP)
+                if (pMP && !pFrame->mvbDynamicOutlier[i])
                 {
                     // Monocular observation
-                    if (pFrame->mvuRight[i] < 0)
+                    if (pFrame->mvuRight[i] < 0 && !pFrame->mvbDynamicOutlier[i])
                     {
                         nInitialCorrespondences++;
                         pFrame->mvbOutlier[i] = false;

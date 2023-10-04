@@ -99,15 +99,15 @@ namespace ORB_SLAM2
         {
             windowTitle += " Outliers Removed";
         }
-        cv::namedWindow(windowTitle, cv::WINDOW_AUTOSIZE);
+        // cv::namedWindow(windowTitle, cv::WINDOW_AUTOSIZE);
 
         if (removeDynamicOutliers)
         {
-            cv::namedWindow("ORB-SLAM2: Inliers");
-            cv::namedWindow("ORB-SLAM2: Outliers");
-            cv::namedWindow("ORB-SLAM2: InOutliers");
-            cv::namedWindow("ORB-SLAM2: DL Model_small");
-            cv::namedWindow("ORB-SLAM2: DL Model_big");
+            // cv::namedWindow("ORB-SLAM2: Inliers");
+            // cv::namedWindow("ORB-SLAM2: Outliers");
+            // cv::namedWindow("ORB-SLAM2: InOutliers");
+            // cv::namedWindow("ORB-SLAM2: DL Model_small");
+            // cv::namedWindow("ORB-SLAM2: DL Model_big");
         }
 
         bool bFollow = true;
@@ -162,21 +162,24 @@ namespace ORB_SLAM2
             cv::Mat imInOutliers = imVec[3];
             cv::Mat imDL_small = imVec[4];
             cv::Mat imDL_big = imVec[5];
-            cv::imshow(windowTitle, im);
+            std::cout << "im.size() = " << im.size() << std::endl;
+            // cv::imshow(windowTitle, im);
             if (removeDynamicOutliers)
             {
                 std::cout << "imInliers.size() = " << imInliers.size() << std::endl;
-                cv::imshow("ORB-SLAM2: Inliers", imInliers);
+                // cv::imshow("ORB-SLAM2: Inliers", imInliers);
                 std::cout << "imOutliers.size() = " << imOutliers.size() << std::endl;
-                cv::imshow("ORB-SLAM2: Outliers", imOutliers);
+                // cv::imshow("ORB-SLAM2: Outliers", imOutliers);
                 std::cout << "imInOutliers.size() = " << imInOutliers.size() << std::endl;
-                cv::imshow("ORB-SLAM2: InOutliers", imInOutliers);
+                // cv::imshow("ORB-SLAM2: InOutliers", imInOutliers);
 
                 if (imDL_small.size().width > 0)
                 {
-                    cv::imshow("ORB-SLAM2: DL Model_small", imDL_small);
+                    std::cout << "imDL_small.size() = " << imDL_small.size() << std::endl;
+                    // cv::imshow("ORB-SLAM2: DL Model_small", imDL_small);
 
-                    cv::imshow("ORB-SLAM2: DL Model_big", imDL_big);
+                    std::cout << "imDL_big.size() = " << imDL_big.size() << std::endl;
+                    // cv::imshow("ORB-SLAM2: DL Model_big", imDL_big);
                 }
             }
 
@@ -195,7 +198,7 @@ namespace ORB_SLAM2
                     mpFrameDrawer->outDL_small.release();
                     mpFrameDrawer->outDL_big.release();
                 }
-
+                usleep(10000);
                 exit(0);
             }
             if (menuReset)
