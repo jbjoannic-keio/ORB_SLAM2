@@ -176,7 +176,6 @@ namespace ORB_SLAM2
         std::mutex mMutexState;
 
         // DL Model
-        RobotSurgerySegmentation *model_small = nullptr;
         RobotSurgerySegmentation *model_big = nullptr;
 
     public:

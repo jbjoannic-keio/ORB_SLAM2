@@ -52,7 +52,6 @@ namespace ORB_SLAM2
         cv::VideoWriter outInliers;
         cv::VideoWriter outOutliers;
         cv::VideoWriter outInOutliers;
-        cv::VideoWriter outDL_small;
         cv::VideoWriter outDL_big;
 
     protected:
@@ -81,7 +80,6 @@ namespace ORB_SLAM2
         std::vector<bool> removeDynamicOutliersMask;
 
         // DL
-        cv::Mat imgDL_small;
         cv::Mat imgDL_big;
 
     public:
@@ -89,7 +87,7 @@ namespace ORB_SLAM2
 
         void gridActualize(cv::Mat grid);
 
-        void drawDLModel(cv::Mat imDL_small, cv::Mat imDL_big);
+        void drawDLModel(cv::Mat imDL_big);
     };
 
 } // namespace ORB_SLAM

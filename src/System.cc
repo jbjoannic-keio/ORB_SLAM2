@@ -123,10 +123,9 @@ namespace ORB_SLAM2
         {
 
             std::cout << "Loading DL model..." << std::endl;
-            model_small = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_small_script.pt", false);
             model_big = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_big_script.pt", true);
         }
-        if (model_small)
+        if (model_big)
             std::cout << "DL model loaded!" << std::endl;
     }
 
@@ -276,27 +275,24 @@ namespace ORB_SLAM2
 
         // DL Model
         cv::Mat mask_big;
-        if (!im.empty() && model_small)
+        if (!im.empty() && model_big)
         {
-            cv::Mat mask_small = model_small->mask(im);
-            cv::Mat fused_small = model_small->fuse(im, mask_small);
 
             mask_big = model_big->mask(im);
             cv::Mat fused_big = model_big->fuse(im, mask_big);
-            mpFrameDrawer->drawDLModel(fused_small, fused_big);
+            mpFrameDrawer->drawDLModel(fused_big);
         }
 
         mpTracker->setDLMask(mask_big);
 
         cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp);
-        std::cout << "Tcw final: " << Tcw << std::endl
-                  << std::endl;
+        std::cout << "Tcw final: " << Tcw << std::endl;
         // 3dGRID
         if (!Tcw.empty())
         {
             grid->computeGridRotation(Tcw);
             grid->correctGridRotation();
-            mCurrentGrid = grid->projectGrid(im, model_small);
+            mCurrentGrid = grid->projectGrid(im, model_big);
             mpFrameDrawer->gridActualize(mCurrentGrid);
         }
         unique_lock<mutex> lock2(mMutexState);
@@ -358,7 +354,7 @@ namespace ORB_SLAM2
         if (mpViewer)
         {
             std::string windowTitle = "ORB-SLAM2: Map Viewer";
-            if (model_small) // if dynamic
+            if (model_big) // if dynamic
             {
                 windowTitle += " Outliers Removed";
             }

@@ -22,7 +22,7 @@ namespace ORB_SLAM2
         {
             windowName += " Outliers Removed";
         }
-        cv::namedWindow(windowName, cv::WINDOW_NORMAL);
+        // cv::namedWindow(windowName, cv::WINDOW_NORMAL);
     };
 
     void ThreeDimensionalFrame::createGrid(float x1, float x2, float y1, float y2, float z1, float z2)
@@ -100,12 +100,27 @@ namespace ORB_SLAM2
 
         cv::Mat t = Tcw.rowRange(0, 3).col(3);
         cv::Mat twc = -Tcw.rowRange(0, 3).colRange(0, 3).t() * t;
+        std::cout << twc << std::endl;
+        Rwc.at<float>(0, 3) = twc.at<float>(0);
+        Rwc.at<float>(1, 3) = twc.at<float>(1);
+        Rwc.at<float>(2, 3) = twc.at<float>(2);
+        // Rwc.rowRange(0, 3).col(3) = twc;
+
+        Tcw.at<float>(0, 3) = Tcw.at<float>(0, 3) * 10;
+        Tcw.at<float>(1, 3) = Tcw.at<float>(1, 3) * 10;
+        Tcw.at<float>(2, 3) = Tcw.at<float>(2, 3) * 10;
 
         Eigen::Map<Eigen::Matrix4f> RcwEigen(Rwc.ptr<float>(), 4, 4);
-
+        Eigen::Map<Eigen::Matrix4f> TcwEigen(Tcw.ptr<float>(), 4, 4);
         // originalCopy.array().col(0) += std::fmod(Tcw.at<float>(0, 3), 10);
         // originalCopy.array().col(2) += std::fmod(Tcw.at<float>(2, 3), 10);
-        rotationGridPoints = originalCopy * RcwEigen.transpose();
+        rotationGridPoints = originalCopy * TcwEigen; //.transpose();
+
+        // print first line of rotation grid point
+        std::cout << Rwc << std::endl;
+        std::cout << originalCopy.row(0) << std::endl;
+
+        std::cout << rotationGridPoints.row(0) << std::endl;
     };
 
     void ThreeDimensionalFrame::correctGridRotation()
@@ -174,16 +189,16 @@ namespace ORB_SLAM2
                 thickness[correctedRotationGridPoints.second[i]]);
         }
 
-        std::string windowName = "RAW";
-        if (removeDynamicOutliers)
-        {
-            windowName += " Outliers Removed";
-        }
-        if (!isFusedGrid)
-        {
-            if (copy.size().width > 0 && copy.size().height > 0)
-                cv::imshow(windowName, copy);
-        }
+        // std::string windowName = "RAW";
+        // if (removeDynamicOutliers)
+        // {
+        //     windowName += " Outliers Removed";
+        // }
+        // if (!isFusedGrid)
+        // {
+        //     if (copy.size().width > 0 && copy.size().height > 0)
+        //         cv::imshow(windowName, copy);
+        // }
         return copy;
     }
 

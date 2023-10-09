@@ -288,14 +288,10 @@ namespace ORB_SLAM2
 
             for (int i = 0; i < mCurrentFrame.mvKeys.size(); i++)
             {
-                cv::KeyPoint kp = mCurrentFrame.mvKeysUn[i];
-                std::cout << "keypoint" << kp.pt.x << " " << kp.pt.y << mDLMask.size() << std::endl;
+                cv::KeyPoint kp = mCurrentFrame.mvKeys[i];
                 if (mDLMask.at<uchar>(kp.pt.y, kp.pt.x) == 255 /* || kp.pt.x > 100*/)
 
                 {
-                    std::cout << "on retire le point" << std::endl;
-                    std::cout << "i" << i << std::endl;
-                    std::cout << mCurrentFrame.mvbDynamicOutlier.size() << std::endl;
                     mCurrentFrame.mvbDynamicOutlier[i] = true;
                 }
             }

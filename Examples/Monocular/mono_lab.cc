@@ -40,6 +40,7 @@ void LoadImages(const string &strSequence, vector<string> &vstrImageFilenames,
 
 int main(int argc, char **argv)
 {
+    bool modeDynamic = 1;
     if (argc != 4)
     {
         cerr << endl
@@ -55,13 +56,13 @@ int main(int argc, char **argv)
     int nImages = vstrImageFilenames.size();
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM2::System SLAM(argv[1], argv[2], ORB_SLAM2::System::MONOCULAR, argv[3], true, false);
-    ORB_SLAM2::System SLAMO(argv[1], argv[2], ORB_SLAM2::System::MONOCULAR, argv[3], true, true);
-    std::string resultPath = argv[3] + string("results/outputGridFused.mp4");
-    int fourcc = cv::VideoWriter::fourcc('m', 'p', '4', 'v');
-    double fps = 30.0;
-    cv::VideoWriter fusedGridWriter = cv::VideoWriter(resultPath, fourcc, fps, cv::Size(480, 270));
-    cv::namedWindow("Fused Grid", cv::WINDOW_AUTOSIZE);
+    ORB_SLAM2::System SLAM(argv[1], argv[2], ORB_SLAM2::System::MONOCULAR, argv[3], true, modeDynamic);
+    // ORB_SLAM2::System SLAMO(argv[1], argv[2], ORB_SLAM2::System::MONOCULAR, argv[3], true, true);
+    //  std::string resultPath = argv[3] + string("results/outputGridFused.mp4");
+    //  int fourcc = cv::VideoWriter::fourcc('m', 'p', '4', 'v');
+    //  double fps = 30.0;
+    //  cv::VideoWriter fusedGridWriter = cv::VideoWriter(resultPath, fourcc, fps, cv::Size(480, 270));
+    //  cv::namedWindow("Fused Grid", cv::WINDOW_AUTOSIZE);
 
     // Vector for tracking time statistics
     vector<float> vTimesTrack;
@@ -97,21 +98,21 @@ int main(int argc, char **argv)
 
         // Pass the image to the SLAM system
         SLAM.TrackMonocular(im, tframe);
-        SLAMO.TrackMonocular(im, tframe);
-        cv::Mat fusedGrid = SLAMO.grid->projectGrid(SLAM.mCurrentGrid, true, true);
-        fusedGridWriter.write(fusedGrid);
-        if (fusedGrid.size().width > 0 && fusedGrid.size().height > 0)
-            cv::imshow("Fused Grid", fusedGrid);
-        double mT = 1e3 / fps;
-        char key = cv::waitKey(mT);
+        // SLAMO.TrackMonocular(im, tframe);
+        //  cv::Mat fusedGrid = SLAMO.grid->projectGrid(SLAM.mCurrentGrid, true, true);
+        //  fusedGridWriter.write(fusedGrid);
+        //  if (fusedGrid.size().width > 0 && fusedGrid.size().height > 0)
+        //      cv::imshow("Fused Grid", fusedGrid);
+        //  double mT = 1e3 / fps;
+        //  char key = cv::waitKey(mT);
 
-        // if key is q
-        if (key == 'q')
-        {
-            fusedGridWriter.release();
-            usleep(6000);
-            exit(0);
-        }
+        // // if key is q
+        // if (key == 'q')
+        // {
+        //     fusedGridWriter.release();
+        //     usleep(6000);
+        //     exit(0);
+        // }
 
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
@@ -136,7 +137,7 @@ int main(int argc, char **argv)
 
     // Stop all threads
     SLAM.Shutdown();
-    SLAMO.Shutdown();
+    // SLAMO.Shutdown();
 
     // Tracking time statistics
     sort(vTimesTrack.begin(), vTimesTrack.end());
@@ -152,7 +153,7 @@ int main(int argc, char **argv)
 
     // Save camera trajectory
     SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
-    SLAMO.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectoryO.txt");
+    // SLAMO.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectoryO.txt");
 
     return 0;
 }

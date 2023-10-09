@@ -99,14 +99,13 @@ namespace ORB_SLAM2
         {
             windowTitle += " Outliers Removed";
         }
-        // cv::namedWindow(windowTitle, cv::WINDOW_AUTOSIZE);
+        cv::namedWindow(windowTitle, cv::WINDOW_AUTOSIZE);
 
         if (removeDynamicOutliers)
         {
             // cv::namedWindow("ORB-SLAM2: Inliers");
             // cv::namedWindow("ORB-SLAM2: Outliers");
             // cv::namedWindow("ORB-SLAM2: InOutliers");
-            // cv::namedWindow("ORB-SLAM2: DL Model_small");
             // cv::namedWindow("ORB-SLAM2: DL Model_big");
         }
 
@@ -160,25 +159,16 @@ namespace ORB_SLAM2
             cv::Mat imInliers = imVec[1];
             cv::Mat imOutliers = imVec[2];
             cv::Mat imInOutliers = imVec[3];
-            cv::Mat imDL_small = imVec[4];
-            cv::Mat imDL_big = imVec[5];
-            std::cout << "im.size() = " << im.size() << std::endl;
-            // cv::imshow(windowTitle, im);
+            cv::Mat imDL_big = imVec[4];
+            cv::imshow(windowTitle, im);
             if (removeDynamicOutliers)
             {
-                std::cout << "imInliers.size() = " << imInliers.size() << std::endl;
                 // cv::imshow("ORB-SLAM2: Inliers", imInliers);
-                std::cout << "imOutliers.size() = " << imOutliers.size() << std::endl;
                 // cv::imshow("ORB-SLAM2: Outliers", imOutliers);
-                std::cout << "imInOutliers.size() = " << imInOutliers.size() << std::endl;
                 // cv::imshow("ORB-SLAM2: InOutliers", imInOutliers);
 
-                if (imDL_small.size().width > 0)
+                if (imDL_big.size().width > 0)
                 {
-                    std::cout << "imDL_small.size() = " << imDL_small.size() << std::endl;
-                    // cv::imshow("ORB-SLAM2: DL Model_small", imDL_small);
-
-                    std::cout << "imDL_big.size() = " << imDL_big.size() << std::endl;
                     // cv::imshow("ORB-SLAM2: DL Model_big", imDL_big);
                 }
             }
@@ -195,7 +185,6 @@ namespace ORB_SLAM2
                     mpFrameDrawer->outInliers.release();
                     mpFrameDrawer->outOutliers.release();
                     mpFrameDrawer->outInOutliers.release();
-                    mpFrameDrawer->outDL_small.release();
                     mpFrameDrawer->outDL_big.release();
                 }
                 usleep(10000);

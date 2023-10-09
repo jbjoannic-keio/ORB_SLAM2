@@ -51,6 +51,10 @@ namespace ORB_SLAM2
         // juste pour tester on rempli le mask a gauche de 255 et de 0 a droite
         // paddedMask = cv::Mat::zeros(270, 480, CV_8UC1);
         // cv::rectangle(paddedMask, cv::Point(0, 0), cv::Point(240, 270), cv::Scalar(255), -1);
+        // on elargit le masque de 10 pixels (dilate)
+        cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(10, 10));
+        cv::dilate(paddedMask, paddedMask, element);
+
         return paddedMask;
     }
 

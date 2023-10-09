@@ -44,7 +44,6 @@ namespace ORB_SLAM2
             outInliers = cv::VideoWriter(strPath + "results/outputInliers.mp4", fourcc, fps, cv::Size(480, 270));
             outOutliers = cv::VideoWriter(strPath + "results/outputOutliers.mp4", fourcc, fps, cv::Size(480, 270));
             outInOutliers = cv::VideoWriter(strPath + "results/outputInOutliers.mp4", fourcc, fps, cv::Size(480, 270));
-            outDL_small = cv::VideoWriter(strPath + "results/outputDL_small.mp4", fourcc, fps, cv::Size(480, 270));
             outDL_big = cv::VideoWriter(strPath + "results/outputDL_big.mp4", fourcc, fps, cv::Size(480, 270));
         }
     }
@@ -58,6 +57,7 @@ namespace ORB_SLAM2
         vector<cv::KeyPoint> vCurrentKeys; // KeyPoints in current frame
         vector<bool> vbVO, vbMap;          // Tracked MapPoints in current frame
         int state;                         // Tracking state
+        vector<bool> vDynamicOutlier;
 
         // Copy variables within scoped mutex
         {
@@ -77,16 +77,19 @@ namespace ORB_SLAM2
                 vCurrentKeys = mvCurrentKeys;
                 vIniKeys = mvIniKeys;
                 vMatches = mvIniMatches;
+                vDynamicOutlier = removeDynamicOutliersMask;
             }
             else if (mState == Tracking::OK)
             {
                 vCurrentKeys = mvCurrentKeys;
                 vbVO = mvbVO;
                 vbMap = mvbMap;
+                vDynamicOutlier = removeDynamicOutliersMask;
             }
             else if (mState == Tracking::LOST)
             {
                 vCurrentKeys = mvCurrentKeys;
+                vDynamicOutlier = removeDynamicOutliersMask;
             }
         } // destroy scoped mutex -> release mutex
 
@@ -133,8 +136,8 @@ namespace ORB_SLAM2
                     // This is a match to a MapPoint in the map
                     if (vbMap[i])
                     {
-                        cv::rectangle(im, pt1, pt2, cv::Scalar(0, 255, 0));
-                        cv::circle(im, vCurrentKeys[i].pt, 2, cv::Scalar(0, 255, 0), -1);
+                        cv::rectangle(im, pt1, pt2, vDynamicOutlier[i] ? cv::Scalar(0, 0, 255) : cv::Scalar(0, 255, 0));
+                        cv::circle(im, vCurrentKeys[i].pt, 2, vDynamicOutlier[i] ? cv::Scalar(0, 0, 255) : cv::Scalar(0, 255, 0), -1);
                         // std::cout << "FrameDrawer::DrawFrame() - vbMap[i] = " << vCurrentKeys[i].pt << std::endl;
                         mnTracked++;
                     }
@@ -185,11 +188,10 @@ namespace ORB_SLAM2
 
         // DL Model
         // if imgDL size == 0, then do not draw
-        cv::Mat imDL_small, imDL_big;
+        cv::Mat imDL_big;
 
-        if (imgDL_small.size() != cv::Size(0, 0))
+        if (imgDL_big.size() != cv::Size(0, 0))
         {
-            imDL_small = imgDL_small.clone();
             imDL_big = imgDL_big.clone();
         }
 
@@ -199,7 +201,6 @@ namespace ORB_SLAM2
         vectIm.push_back(imInliers);
         vectIm.push_back(imOutliers);
         vectIm.push_back(imInOutliers);
-        vectIm.push_back(imDL_small);
         vectIm.push_back(imDL_big);
         outAll.write(im);
         if (mvCurrentMatches.size() > 0)
@@ -287,7 +288,12 @@ namespace ORB_SLAM2
             mvCurrentMatches = pTracker->couplesPoints;
             mvCurrentMatchesRansacInliers = pTracker->couplesPointsRansacInliers;
             mvCurrentMatchesRansacOutliers = pTracker->couplesPointsRansacOutliers;
-            removeDynamicOutliersMask = pTracker->removeDynamicOutliersMask;
+        }
+        removeDynamicOutliersMask = pTracker->removeDynamicOutliersMask;
+        std::cout << "FrameDrawer::Update() - removeDynamicOutliersMask.size() = " << removeDynamicOutliersMask.size() << std::endl;
+        if (removeDynamicOutliersMask.size() == 0)
+        {
+            removeDynamicOutliersMask = std::vector<bool>(N, false);
         }
 
         // on va mettre ic le dl
@@ -299,13 +305,11 @@ namespace ORB_SLAM2
         outGrid.write(imgGrid);
     }
 
-    void FrameDrawer::drawDLModel(cv::Mat imDL_small, cv::Mat imDL_big)
+    void FrameDrawer::drawDLModel(cv::Mat imDL_big)
     {
-        imgDL_small = imDL_small.clone();
         imgDL_big = imDL_big.clone();
-        if (outDL_small.isOpened())
+        if (outDL_big.isOpened())
         {
-            outDL_small.write(imgDL_small);
             outDL_big.write(imgDL_big);
         }
     }

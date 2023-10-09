@@ -286,9 +286,9 @@ namespace ORB_SLAM2
         cv::Mat mask;
         cv::Mat F = cv::findFundamentalMat(matchesMatrix.first, matchesMatrix.second, cv::FM_RANSAC, 3, 0.99, mask);
         // std::cout << "Fundamental" << std::endl;
-        std::cout << F << std::endl;
+        // std::cout << F << std::endl;
         // std::cout << "Fundamental" << std::endl;
-        std::cout << mask << std::endl;
+        // std::cout << mask << std::endl;
         // std::cout << "mask" << std::endl;
         std::vector<std::pair<cv::Point2f, cv::Point2f>> outliers;
         std::vector<std::pair<cv::Point2f, cv::Point2f>> inliers;
