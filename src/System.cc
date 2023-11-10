@@ -123,7 +123,7 @@ namespace ORB_SLAM2
         {
 
             std::cout << "Loading DL model..." << std::endl;
-            model_big = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_big_script.pt", true);
+            model_big = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_big_script.pt", true, "/home/jbjoannic/Documents/Recherche/orbSlam/test-libtorch/results/maskMorphology/model.pt");
         }
         if (model_big)
             std::cout << "DL model loaded!" << std::endl;
@@ -274,11 +274,13 @@ namespace ORB_SLAM2
         }
 
         // DL Model
-        cv::Mat mask_big;
+        cv::Mat mask_big, maskOrgans;
         if (!im.empty() && model_big)
         {
 
             mask_big = model_big->mask(im);
+            maskOrgans = model_big->maskOrgans(im, mask_big);
+            mask_big = cv::max(mask_big, maskOrgans);
             cv::Mat fused_big = model_big->fuse(im, mask_big);
             mpFrameDrawer->drawDLModel(fused_big);
         }

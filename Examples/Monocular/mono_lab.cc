@@ -41,6 +41,7 @@ void LoadImages(const string &strSequence, vector<string> &vstrImageFilenames,
 int main(int argc, char **argv)
 {
     bool modeDynamic = 1;
+    int STARTIMAGE = 10000; // 3000;
     if (argc != 4)
     {
         cerr << endl
@@ -76,7 +77,7 @@ int main(int argc, char **argv)
 
     // Main loop
     cv::Mat im;
-    int STARTIMAGE = 10000; // 3000;
+
     for (int ni = STARTIMAGE; ni < nImages; ni++)
     {
         // Read image from file
