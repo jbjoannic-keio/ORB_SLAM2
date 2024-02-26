@@ -45,9 +45,9 @@ using namespace std;
 namespace ORB_SLAM2
 {
 
-    Tracking::Tracking(System *pSys, ORBVocabulary *pVoc, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Map *pMap, KeyFrameDatabase *pKFDB, const string &strSettingPath, const int sensor, const bool removeDynamicOutliers) : mState(NO_IMAGES_YET), mSensor(sensor), mbOnlyTracking(false), mbVO(false), mpORBVocabulary(pVoc),
-                                                                                                                                                                                                                                    mpKeyFrameDB(pKFDB), mpInitializer(static_cast<Initializer *>(NULL)), mpSystem(pSys), mpViewer(NULL),
-                                                                                                                                                                                                                                    mpFrameDrawer(pFrameDrawer), mpMapDrawer(pMapDrawer), mpMap(pMap), mnLastRelocFrameId(0)
+    Tracking::Tracking(System *pSys, ORBVocabulary *pVoc, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Map *pMap, KeyFrameDatabase *pKFDB, const string &strSettingPath, const int sensor, const int mode) : mState(NO_IMAGES_YET), mSensor(sensor), mbOnlyTracking(false), mbVO(false), mpORBVocabulary(pVoc),
+                                                                                                                                                                                                                  mpKeyFrameDB(pKFDB), mpInitializer(static_cast<Initializer *>(NULL)), mpSystem(pSys), mpViewer(NULL),
+                                                                                                                                                                                                                  mpFrameDrawer(pFrameDrawer), mpMapDrawer(pMapDrawer), mpMap(pMap), mnLastRelocFrameId(0)
     {
         // Load camera parameters from settings file
 
@@ -149,7 +149,7 @@ namespace ORB_SLAM2
                 mDepthMapFactor = 1.0f / mDepthMapFactor;
         }
 
-        if (removeDynamicOutliers)
+        if (mode != 0)
         {
             dynamicEraser = new DynamicEraser(mK);
         }
@@ -433,8 +433,8 @@ namespace ORB_SLAM2
                 if (bOK && !mbVO)
                     bOK = TrackLocalMap();
             }
-            std::cout << "TCW apres tracklocalmap" << std::endl;
-            std::cout << mCurrentFrame.mTcw << std::endl;
+            // std::cout << "TCW apres tracklocalmap" << std::endl;
+            // std::cout << mCurrentFrame.mTcw << std::endl;
 
             if (bOK)
                 mState = OK;
@@ -930,13 +930,13 @@ namespace ORB_SLAM2
         //  dynamicEraser->main();
         //  Optimize frame pose with all matches
 
-        std::cout << "avant derniere tcw ?" << std::endl;
-        std::cout << mCurrentFrame.mTcw << std::endl;
+        // std::cout << "avant derniere tcw ?" << std::endl;
+        // std::cout << mCurrentFrame.mTcw << std::endl;
         Optimizer::PoseOptimization(&mCurrentFrame);
-        std::cout << "apres derniere tcw ?" << std::endl;
-        std::cout << mCurrentFrame.mTcw << std::endl;
+        // std::cout << "apres derniere tcw ?" << std::endl;
+        // std::cout << mCurrentFrame.mTcw << std::endl;
 
-        std::cout << "outliers" << std::endl;
+        // std::cout << "outliers" << std::endl;
         // ca a lair detre les pts non co a la
         // Discard outliers
         int nmatchesMap = 0;

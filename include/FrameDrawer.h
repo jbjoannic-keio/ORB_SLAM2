@@ -39,7 +39,7 @@ namespace ORB_SLAM2
     class FrameDrawer
     {
     public:
-        FrameDrawer(Map *pMap, const string strPath, const bool removeDynamicOutliers);
+        FrameDrawer(Map *pMap, const string strPath, const int mode = 0, const int skeletMode = 0);
 
         // Update info from the last processed frame.
         void Update(Tracking *pTracker);
@@ -81,6 +81,7 @@ namespace ORB_SLAM2
 
         // DL
         cv::Mat imgDL_big;
+        cv::Mat imgAll;
 
     public:
         cv::Mat imgGrid;

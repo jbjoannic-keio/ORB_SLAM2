@@ -55,7 +55,7 @@ namespace ORB_SLAM2
 
     public:
         Tracking(System *pSys, ORBVocabulary *pVoc, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Map *pMap,
-                 KeyFrameDatabase *pKFDB, const string &strSettingPath, const int sensor, const bool removeDynamicOutliers = false);
+                 KeyFrameDatabase *pKFDB, const string &strSettingPath, const int sensor, const int mode = 0);
 
         // Preprocess the input and call Track(). Extract features and performs stereo matching.
         cv::Mat GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRectRight, const double &timestamp);
@@ -222,7 +222,6 @@ namespace ORB_SLAM2
         std::vector<std::pair<cv::Point2f, cv::Point2f>> couplesPoints;
         std::vector<std::pair<cv::Point2f, cv::Point2f>> couplesPointsRansacInliers;
         std::vector<std::pair<cv::Point2f, cv::Point2f>> couplesPointsRansacOutliers;
-
 
         std::vector<bool> removeDynamicOutliersMask;
         void setDLMask(const cv::Mat &mask);

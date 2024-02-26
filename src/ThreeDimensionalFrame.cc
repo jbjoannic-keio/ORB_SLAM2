@@ -2,7 +2,7 @@
 
 namespace ORB_SLAM2
 {
-    ThreeDimensionalFrame::ThreeDimensionalFrame(const std::string &strSettingPath, const std::string &strPath, const bool removeDynamicOutliers)
+    ThreeDimensionalFrame::ThreeDimensionalFrame(const std::string &strSettingPath, const std::string &strPath, const int mode)
     {
         cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
         float fx = fSettings["Camera.fx"];
@@ -18,10 +18,11 @@ namespace ORB_SLAM2
         K.copyTo(mK);
 
         std::string windowName = "RAW";
-        if (removeDynamicOutliers)
+        if (mode != 0)
         {
             windowName += " Outliers Removed";
         }
+        iMode = mode;
         // cv::namedWindow(windowName, cv::WINDOW_NORMAL);
     };
 
@@ -100,7 +101,7 @@ namespace ORB_SLAM2
 
         cv::Mat t = Tcw.rowRange(0, 3).col(3);
         cv::Mat twc = -Tcw.rowRange(0, 3).colRange(0, 3).t() * t;
-        std::cout << twc << std::endl;
+        // std::cout << twc << std::endl;
         Rwc.at<float>(0, 3) = twc.at<float>(0);
         Rwc.at<float>(1, 3) = twc.at<float>(1);
         Rwc.at<float>(2, 3) = twc.at<float>(2);
@@ -117,10 +118,10 @@ namespace ORB_SLAM2
         rotationGridPoints = originalCopy * TcwEigen; //.transpose();
 
         // print first line of rotation grid point
-        std::cout << Rwc << std::endl;
-        std::cout << originalCopy.row(0) << std::endl;
+        // std::cout << Rwc << std::endl;
+        // std::cout << originalCopy.row(0) << std::endl;
 
-        std::cout << rotationGridPoints.row(0) << std::endl;
+        // std::cout << rotationGridPoints.row(0) << std::endl;
     };
 
     void ThreeDimensionalFrame::correctGridRotation()
@@ -171,7 +172,23 @@ namespace ORB_SLAM2
             copy = img.clone();
 
         Eigen::Map<Eigen::Matrix3f> mKEigen(mK.ptr<float>(), 3, 3);
-        std::vector<cv::Scalar> colors = {cv::Scalar(100, 100, 100), cv::Scalar(255, 255, 255), removeDynamicOutliers ? cv::Scalar(100, 0, 150) : cv::Scalar(100, 150, 0)};
+        cv::Scalar color;
+        switch (iMode)
+        {
+        case 0:
+            color = cv::Scalar(100, 150, 0);
+            break;
+        case 1:
+            color = cv::Scalar(100, 0, 150);
+            break;
+        case 2:
+            color = cv::Scalar(150, 0, 100);
+            break;
+        case 3:
+            color = cv::Scalar(150, 100, 0);
+            break;
+        }
+        std::vector<cv::Scalar> colors = {cv::Scalar(100, 100, 100), cv::Scalar(255, 255, 255), color};
         std::vector<int> thickness = {1, 1, 2};
 
         projectedGridPoints = Eigen::MatrixX3f(correctedRotationGridPoints.first.rows(), 3);

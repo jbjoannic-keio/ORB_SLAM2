@@ -30,8 +30,8 @@
 namespace ORB_SLAM2
 {
 
-    System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const string &strPath, const bool bUseViewer, const bool removeDynamicOutliers) : mSensor(sensor), mpViewer(static_cast<Viewer *>(NULL)), mbReset(false), mbActivateLocalizationMode(false),
-                                                                                                                                                                                    mbDeactivateLocalizationMode(false)
+    System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const string &strPath, const bool bUseViewer, const int mode, const int skeletMode /*, Metrics *metrics*/) : mSensor(sensor), mpViewer(static_cast<Viewer *>(NULL)), mbReset(false), mbActivateLocalizationMode(false),
+                                                                                                                                                                                                               mbDeactivateLocalizationMode(false)
     {
         // Output welcome message
         cout << endl
@@ -80,13 +80,14 @@ namespace ORB_SLAM2
         mpMap = new Map();
 
         // Create Drawers. These are used by the Viewer
-        mpFrameDrawer = new FrameDrawer(mpMap, strPath, removeDynamicOutliers);
+        std::cout << "system mode: " << mode << std::endl;
+        mpFrameDrawer = new FrameDrawer(mpMap, strPath, mode, skeletMode);
         mpMapDrawer = new MapDrawer(mpMap, strSettingsFile);
 
         // Initialize the Tracking thread
         //(it will live in the main thread of execution, the one that called this constructor)
         mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
-                                 mpMap, mpKeyFrameDatabase, strSettingsFile, mSensor, removeDynamicOutliers);
+                                 mpMap, mpKeyFrameDatabase, strSettingsFile, mSensor, mode);
 
         // Initialize the Local Mapping thread and launch
         mpLocalMapper = new LocalMapping(mpMap, mSensor == MONOCULAR);
@@ -100,7 +101,7 @@ namespace ORB_SLAM2
         if (bUseViewer)
         {
             mpViewer = new Viewer(this, mpFrameDrawer, mpMapDrawer, mpTracker, strSettingsFile);
-            mptViewer = new thread(&Viewer::Run, mpViewer, removeDynamicOutliers);
+            mptViewer = new thread(&Viewer::Run, mpViewer, mode);
             mpTracker->SetViewer(mpViewer);
         }
 
@@ -115,18 +116,24 @@ namespace ORB_SLAM2
         mpLoopCloser->SetLocalMapper(mpLocalMapper);
 
         // 3dGRID
-        grid = new ThreeDimensionalFrame(strSettingsFile, strPath, removeDynamicOutliers);
+        grid = new ThreeDimensionalFrame(strSettingsFile, strPath, mode);
         grid->createGrid(-10, 10, 1, 1, -30, 30);
 
         // DL Model
-        if (removeDynamicOutliers)
+        if (mode != 0)
         {
 
             std::cout << "Loading DL model..." << std::endl;
-            model_big = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_big_script.pt", true, "/home/jbjoannic/Documents/Recherche/orbSlam/test-libtorch/results/maskMorphology/model.pt");
+            model_big = new RobotSurgerySegmentation("/home/jbjoannic/Documents/Recherche/orbSlam/robot-surgery-segmentation/data/models/linknet_binary_20/model_0_new_script.pt", true, "/home/jbjoannic/Documents/Recherche/orbSlam/test-libtorch/results/maskMorphology/model.pt");
         }
         if (model_big)
             std::cout << "DL model loaded!" << std::endl;
+        iMode = mode;
+
+        // Position Writer
+        mPositionWriter = new PositionWriter(strPath, mode);
+
+        // pMetrics = metrics;
     }
 
     cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
@@ -231,7 +238,7 @@ namespace ORB_SLAM2
         return Tcw;
     }
 
-    cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
+    cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp, const cv::Mat &preprocessedToolsIm, const cv::Mat &preprocessedToolsOrgansIm)
     {
         if (mSensor != MONOCULAR)
         {
@@ -268,27 +275,55 @@ namespace ORB_SLAM2
             unique_lock<mutex> lock(mMutexReset);
             if (mbReset)
             {
+                mPositionWriter->resetSlam(timestamp);
                 mpTracker->Reset();
                 mbReset = false;
+                // if (pMetrics)
+                //     pMetrics->reset();
             }
         }
 
         // DL Model
-        cv::Mat mask_big, maskOrgans;
-        if (!im.empty() && model_big)
+        cv::Mat mask_big, maskOrgans, maskSAM;
+        if (!im.empty() && model_big) // iMode==1
         {
+            if (preprocessedToolsIm.empty())
+                mask_big = model_big->mask(im);
+            else
+            {
+                mask_big = preprocessedToolsIm.clone();
+                std::cout << "preprocessedTools loaded" << std::endl;
+            }
+            if (iMode == 2)
+            {
+                maskOrgans = model_big->maskOrgans(im, mask_big);
+                mask_big = cv::max(mask_big, maskOrgans);
+            }
+            if (iMode == 3)
+            {
+                if (preprocessedToolsOrgansIm.empty())
+                {
+                    // std::vector<cv::Point> seedSAM = model_big->selectExtrimity(mask_big, im);
+                    std::vector<cv::Point> seedSAM2 = model_big->selectExtrimityBySkelet(mask_big);
 
-            mask_big = model_big->mask(im);
-            maskOrgans = model_big->maskOrgans(im, mask_big);
-            mask_big = cv::max(mask_big, maskOrgans);
-            cv::Mat fused_big = model_big->fuse(im, mask_big);
+                    maskSAM = model_big->getSamMask(im, seedSAM2);
+                    std::cout << "tools organs computed" << maskSAM.size() << std::endl;
+                }
+                else
+                {
+                    maskSAM = preprocessedToolsOrgansIm.clone();
+                    std::cout << "preprocessedToolsOrgans loaded" << std::endl;
+                }
+                mask_big = cv::max(mask_big, maskSAM);
+            }
+            cv::Mat fused_big = model_big->fuse(im, mask_big, cv::Mat::zeros(im.size(), CV_8UC1), cv::Mat::zeros(im.size(), CV_8UC1), cv::Mat::zeros(im.size(), CV_8UC1));
             mpFrameDrawer->drawDLModel(fused_big);
         }
 
         mpTracker->setDLMask(mask_big);
 
         cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp);
-        std::cout << "Tcw final: " << Tcw << std::endl;
+        // std::cout << "Tcw final: " << Tcw << std::endl;
         // 3dGRID
         if (!Tcw.empty())
         {
@@ -297,10 +332,36 @@ namespace ORB_SLAM2
             mCurrentGrid = grid->projectGrid(im, model_big);
             mpFrameDrawer->gridActualize(mCurrentGrid);
         }
+        else
+        {
+            cv::Scalar color;
+            switch (iMode)
+            {
+            case 0:
+                color = cv::Scalar(100, 150, 0);
+                break;
+            case 1:
+                color = cv::Scalar(100, 0, 150);
+                break;
+            case 2:
+                color = cv::Scalar(150, 0, 100);
+                break;
+            case 3:
+                color = cv::Scalar(150, 100, 0);
+                break;
+            }
+            cv::Mat addText = im.clone();
+            cv::putText(addText, "LOST", cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1, color, 2);
+            mpFrameDrawer->gridActualize(addText);
+        }
+
         unique_lock<mutex> lock2(mMutexState);
         mTrackingState = mpTracker->mState;
         mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
         mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
+
+        // Position Writer
+        mPositionWriter->writePosition(Tcw, mpTracker->mState, mpTracker->mCurrentFrame.mTimeStamp);
 
         return Tcw;
     }

@@ -171,8 +171,8 @@ namespace ORB_SLAM2
         //            << E << std::endl;
         for (int i = 0; i < 4; i++)
         {
-            std::cout << Rotations[i] << std::endl;
-            std::cout << Translations[i] << std::endl;
+            // std::cout << Rotations[i] << std::endl; //MODIF ??
+            // std::cout << Translations[i] << std::endl;
         }
         cv::Mat vecR(1, 3, CV_32F);
         // std::cout << "mid#" << std::endl;
@@ -182,9 +182,9 @@ namespace ORB_SLAM2
         // std::cout << "vecR = " << std::endl;
         for (int i = 0; i < 3; i++)
         {
-            std::cout << vecR.at<float>(i) << "  ";
+            // std::cout << vecR.at<float>(i) << "  ";
         }
-        std::cout << std::endl;
+        // std::cout << std::endl;
         vec[0] = vecR.at<float>(0);
         vec[1] = vecR.at<float>(1);
         vec[2] = vecR.at<float>(2);
@@ -193,7 +193,7 @@ namespace ORB_SLAM2
         vec[5] = Translations[0].at<float>(2);
         for (int i = 0; i < 6; i++)
         {
-            std::cout << vec[i] << "  ";
+            // std::cout << vec[i] << "  ";
         }
         // std::cout << std::endl;
         // std::cout << "fin vectorisation" << std::endl;
@@ -346,7 +346,7 @@ namespace ORB_SLAM2
         // Convert the rotation matrices to rotation vectors
         // std::vector<cv::Vec3d> rotationVectors;
         cv::Mat rotationVectors(rotationMatrices.size(), 3, CV_32F);
-        std::cout << "rotationVectors rows" << rotationVectors.rows << std::endl;
+        // std::cout << "rotationVectors rows" << rotationVectors.rows << std::endl;
         int i = 0;
         for (const auto &rotationMatrix : rotationMatrices)
         {
@@ -361,19 +361,19 @@ namespace ORB_SLAM2
             i++;
         }
         // rotationVectors = rotationVectors.t();
-        std::cout << "rotationVectors" << rotationVectors << std::endl;
+        // std::cout << "rotationVectors" << rotationVectors << std::endl;
         cv::Mat meanVector, covarianceMatrix;
         cv::Mat rotationVectorsMat(rotationVectors);
         cv::calcCovarMatrix(rotationVectorsMat, covarianceMatrix, meanVector, cv::COVAR_NORMAL | cv::COVAR_ROWS);
-        std::cout << "rotationVectorsMat" << rotationVectorsMat << std::endl;
-        std::cout << "meanVector" << meanVector << std::endl;
-        std::cout << "covarianceMatrix" << covarianceMatrix << std::endl;
+        // std::cout << "rotationVectorsMat" << rotationVectorsMat << std::endl;
+        // std::cout << "meanVector" << meanVector << std::endl;
+        // std::cout << "covarianceMatrix" << covarianceMatrix << std::endl;
 
         // Invert the covariance matrix
         cv::Mat inverseCovarianceMatrix;
-        std::cout << cv::determinant(covarianceMatrix) << std::endl;
+        // std::cout << cv::determinant(covarianceMatrix) << std::endl;
         cv::invert(covarianceMatrix, inverseCovarianceMatrix);
-        std::cout << "InvertcovarianceMatrix" << inverseCovarianceMatrix << std::endl;
+        // std::cout << "InvertcovarianceMatrix" << inverseCovarianceMatrix << std::endl;
 
         // Calculate the Mahalanobis distance for each rotation vector
         std::vector<float> mahalanobisDistances;

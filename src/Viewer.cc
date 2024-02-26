@@ -54,13 +54,13 @@ namespace ORB_SLAM2
         mViewpointF = fSettings["Viewer.ViewpointF"];
     }
 
-    void Viewer::Run(const bool removeDynamicOutliers)
+    void Viewer::Run(const int mode)
     {
         mbFinished = false;
         mbStopped = false;
 
         std::string windowTitlePangolin = "ORB-SLAM2: Map Viewer";
-        if (removeDynamicOutliers)
+        if (mode != 0)
         {
             windowTitlePangolin += " Outliers Removed";
         }
@@ -95,19 +95,11 @@ namespace ORB_SLAM2
         Twc.SetIdentity();
 
         std::string windowTitle = "ORB-SLAM2: Current Frame";
-        if (removeDynamicOutliers)
+        if (mode != 0)
         {
             windowTitle += " Outliers Removed";
         }
         cv::namedWindow(windowTitle, cv::WINDOW_AUTOSIZE);
-
-        if (removeDynamicOutliers)
-        {
-            // cv::namedWindow("ORB-SLAM2: Inliers");
-            // cv::namedWindow("ORB-SLAM2: Outliers");
-            // cv::namedWindow("ORB-SLAM2: InOutliers");
-            // cv::namedWindow("ORB-SLAM2: DL Model_big");
-        }
 
         bool bFollow = true;
         bool bLocalizationMode = false;
@@ -161,7 +153,7 @@ namespace ORB_SLAM2
             cv::Mat imInOutliers = imVec[3];
             cv::Mat imDL_big = imVec[4];
             cv::imshow(windowTitle, im);
-            if (removeDynamicOutliers)
+            if (mode != 0)
             {
                 // cv::imshow("ORB-SLAM2: Inliers", imInliers);
                 // cv::imshow("ORB-SLAM2: Outliers", imOutliers);
@@ -179,8 +171,10 @@ namespace ORB_SLAM2
             {
                 mpFrameDrawer->outGrid.release();
                 mpFrameDrawer->outAll.release();
+                mpSystem->mPositionWriter->closeFile();
+                // mpSystem->pMetrics->closeFile();
 
-                if (removeDynamicOutliers)
+                if (mode != 0)
                 {
                     mpFrameDrawer->outInliers.release();
                     mpFrameDrawer->outOutliers.release();

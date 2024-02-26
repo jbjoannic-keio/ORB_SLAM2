@@ -29,22 +29,51 @@
 namespace ORB_SLAM2
 {
 
-    FrameDrawer::FrameDrawer(Map *pMap, const string strPath, const bool removeDynamicOutliers) : mpMap(pMap)
+    FrameDrawer::FrameDrawer(Map *pMap, const string strPath, const int mode, const int skeletMode) : mpMap(pMap)
     {
         mState = Tracking::SYSTEM_NOT_READY;
         mIm = cv::Mat(480, 640, CV_8UC3, cv::Scalar(0, 0, 0));
 
         int fourcc = cv::VideoWriter::fourcc('m', 'p', '4', 'v');
         double fps = 30.0;
-
-        outGrid = cv::VideoWriter(strPath + "results/outputGrid" + (removeDynamicOutliers ? "_removed" : "") + ".mp4", fourcc, fps, cv::Size(480, 270));
-        outAll = cv::VideoWriter(strPath + "results/outputAll" + (removeDynamicOutliers ? "_removed" : "") + ".mp4", fourcc, fps, cv::Size(480, 270));
-        if (removeDynamicOutliers)
+        std::string additionalString;
+        std::cout << "FrameDrawer::FrameDrawer() - mode = " << mode << std::endl;
+        switch (mode)
         {
-            outInliers = cv::VideoWriter(strPath + "results/outputInliers.mp4", fourcc, fps, cv::Size(480, 270));
-            outOutliers = cv::VideoWriter(strPath + "results/outputOutliers.mp4", fourcc, fps, cv::Size(480, 270));
-            outInOutliers = cv::VideoWriter(strPath + "results/outputInOutliers.mp4", fourcc, fps, cv::Size(480, 270));
-            outDL_big = cv::VideoWriter(strPath + "results/outputDL_big.mp4", fourcc, fps, cv::Size(480, 270));
+        case 0:
+            additionalString = "_base";
+            break;
+        case 1:
+            additionalString = "_toolsRemoved";
+            break;
+        case 2:
+            additionalString = "_toolsAndOrgansRemoved";
+            break;
+        case 3:
+            additionalString = "_toolsAndOrgansRemoved_SAM";
+
+            switch (skeletMode)
+            {
+            case 0:
+                additionalString += "_skelet0";
+                break;
+            case 1:
+                additionalString += "_skelet1";
+                break;
+            case 2:
+                additionalString += "_skelet2";
+                break;
+            }
+            break;
+        }
+        outGrid = cv::VideoWriter(strPath + "results/outputGrid" + additionalString + ".mp4", fourcc, fps, cv::Size(480, 270));
+        outAll = cv::VideoWriter(strPath + "results/outputAll" + additionalString + ".mp4", fourcc, fps, cv::Size(480, 270));
+        if (mode != 0)
+        {
+            outInliers = cv::VideoWriter(strPath + "results/outputInliers" + additionalString + ".mp4", fourcc, fps, cv::Size(480, 270));
+            outOutliers = cv::VideoWriter(strPath + "results/outputOutliers" + additionalString + ".mp4", fourcc, fps, cv::Size(480, 270));
+            outInOutliers = cv::VideoWriter(strPath + "results/outputInOutliers" + additionalString + ".mp4", fourcc, fps, cv::Size(480, 270));
+            outDL_big = cv::VideoWriter(strPath + "results/outputDL_big" + additionalString + ".mp4", fourcc, fps, cv::Size(480, 270));
         }
     }
 
@@ -202,7 +231,7 @@ namespace ORB_SLAM2
         vectIm.push_back(imOutliers);
         vectIm.push_back(imInOutliers);
         vectIm.push_back(imDL_big);
-        outAll.write(im);
+        imgAll = im.clone();
         if (mvCurrentMatches.size() > 0)
         {
             outInliers.write(imInliers);
@@ -290,7 +319,7 @@ namespace ORB_SLAM2
             mvCurrentMatchesRansacOutliers = pTracker->couplesPointsRansacOutliers;
         }
         removeDynamicOutliersMask = pTracker->removeDynamicOutliersMask;
-        std::cout << "FrameDrawer::Update() - removeDynamicOutliersMask.size() = " << removeDynamicOutliersMask.size() << std::endl;
+        // std::cout << "FrameDrawer::Update() - removeDynamicOutliersMask.size() = " << removeDynamicOutliersMask.size() << std::endl;
         if (removeDynamicOutliersMask.size() == 0)
         {
             removeDynamicOutliersMask = std::vector<bool>(N, false);
@@ -303,6 +332,7 @@ namespace ORB_SLAM2
     {
         imgGrid = grid.clone();
         outGrid.write(imgGrid);
+        outAll.write(imgAll);
     }
 
     void FrameDrawer::drawDLModel(cv::Mat imDL_big)

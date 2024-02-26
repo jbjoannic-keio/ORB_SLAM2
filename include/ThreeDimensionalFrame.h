@@ -13,7 +13,7 @@ namespace ORB_SLAM2
     {
     public:
         // Constructor, use the setting paths to get the camera parameters
-        ThreeDimensionalFrame(const std::string &strSettingPath, const std::string &strPath, const bool removeDynamicOutliers = false);
+        ThreeDimensionalFrame(const std::string &strSettingPath, const std::string &strPath, const int mode = 0);
 
         // Create a 3D grid with the given parameters (boundaries of the grid around the camera)
         void createGrid(float x1, float x2, float y1, float y2, float z1, float z2);
@@ -49,6 +49,8 @@ namespace ORB_SLAM2
 
         // matrix containing the img coordinates of each points
         Eigen::MatrixX3f projectedGridPoints;
+
+        int iMode;
     };
 
 } // namespace ORB_SLAM2

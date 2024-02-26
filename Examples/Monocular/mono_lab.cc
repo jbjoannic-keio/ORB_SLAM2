@@ -32,32 +32,50 @@
 
 #include "System.h"
 #include "ThreeDimensionalFrame.h"
+// #include "Metrics.h"
 
 using namespace std;
 
-void LoadImages(const string &strSequence, vector<string> &vstrImageFilenames,
-                vector<double> &vTimestamps);
+void LoadImages(const string &str11Sequence, vector<string> &vstrImageFilenames,
+                vector<double> &vTimestamps,
+                vector<bool> &vIsHorizontal,
+                bool shouldUsePreprocessedFrames,
+                vector<string> &vstrToolsImageFilenames,
+                vector<string> &vstrToolsOrgansImageFilenames,
+                int modeDynamic = 3,
+                int slamMode = 3,
+                int skeletMode = 0);
 
 int main(int argc, char **argv)
 {
-    bool modeDynamic = 1;
-    int STARTIMAGE = 10000; // 3000;
-    if (argc != 4)
+    int modeDynamic = 3; //   0 static, 1 tools with DL, 2 tools + organs with own, 3 tools + organs with SAME
+    int samMode = 3;
+    int skeletMode = 2;     // 0 normal //1 all paths  (tip le plus proche du centre) //2 prend le point le plkus proche sur le contour le plus long
+    int STARTIMAGE = 13200; // 3000;
+    bool shouldUsePreprocessedFrames = 1;
+    bool shouldErasePointsFromMap = 0; // points are are only prevented from being added to the map, but not removed from the map....
+
+    if (argc != 5)
     {
         cerr << endl
              << "Usage: ./mono_kitti path_to_vocabulary path_to_settings path_to_sequence" << endl;
         return 1;
     }
 
+    // ORB_SLAM2::Metrics metrics = ORB_SLAM2::Metrics(string(argv[3]), modeDynamic);
+
     // Retrieve paths to images
     vector<string> vstrImageFilenames;
+    vector<string> vstrToolsImageFilenames;
+    vector<string> vstrToolsOrgansImageFilenames;
     vector<double> vTimestamps;
-    LoadImages(string(argv[3]), vstrImageFilenames, vTimestamps);
+    vector<bool> vIsHorizontal;
+    LoadImages(string(argv[3]), vstrImageFilenames, vTimestamps, vIsHorizontal, shouldUsePreprocessedFrames, vstrToolsImageFilenames, vstrToolsOrgansImageFilenames, modeDynamic, samMode, skeletMode);
 
     int nImages = vstrImageFilenames.size();
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM2::System SLAM(argv[1], argv[2], ORB_SLAM2::System::MONOCULAR, argv[3], true, modeDynamic);
+    ORB_SLAM2::System SLAM(argv[1], argv[2], ORB_SLAM2::System::MONOCULAR, argv[3], true, modeDynamic, skeletMode);
     // ORB_SLAM2::System SLAMO(argv[1], argv[2], ORB_SLAM2::System::MONOCULAR, argv[3], true, true);
     //  std::string resultPath = argv[3] + string("results/outputGridFused.mp4");
     //  int fourcc = cv::VideoWriter::fourcc('m', 'p', '4', 'v');
@@ -69,19 +87,37 @@ int main(int argc, char **argv)
     vector<float> vTimesTrack;
     vTimesTrack.resize(nImages);
 
-    cout << endl
-         << "-------" << endl;
-    cout << "Start processing sequence ..." << endl;
-    cout << "Images in the sequence: " << nImages << endl
-         << endl;
+    std::cout << std::endl
+              << "-------" << std::endl;
+    std::cout << "Start processing sequence ..." << std::endl;
+    std::cout << "Images in the sequence: " << nImages << std::endl
+              << std::endl;
 
     // Main loop
     cv::Mat im;
+    cv::Mat preprocessToolsIm;
+    cv::Mat preprocessToolsOrgansIm;
 
     for (int ni = STARTIMAGE; ni < nImages; ni++)
     {
+        std::cout << "______________________________" << std::endl;
+        std::cout << "Frame " << ni << std::endl;
         // Read image from file
         im = cv::imread(vstrImageFilenames[ni], CV_LOAD_IMAGE_UNCHANGED);
+        if (modeDynamic == 1 || modeDynamic == 3)
+        {
+            std::cout << "reading " << vstrToolsImageFilenames[ni] << std::endl;
+            preprocessToolsIm = cv::imread(vstrToolsImageFilenames[ni], CV_LOAD_IMAGE_UNCHANGED);
+            if (shouldUsePreprocessedFrames)
+                cv::imshow("Preprocessed Tools", preprocessToolsIm);
+        }
+        if (modeDynamic == 3)
+        {
+            std::cout << "reading " << vstrToolsOrgansImageFilenames[ni] << std::endl;
+            preprocessToolsOrgansIm = cv::imread(vstrToolsOrgansImageFilenames[ni], CV_LOAD_IMAGE_UNCHANGED);
+            if (shouldUsePreprocessedFrames)
+                cv::imshow("Preprocessed Tools Organs", preprocessToolsOrgansIm);
+        }
         double tframe = vTimestamps[ni];
 
         if (im.empty())
@@ -98,14 +134,15 @@ int main(int argc, char **argv)
 #endif
 
         // Pass the image to the SLAM system
-        SLAM.TrackMonocular(im, tframe);
-        // SLAMO.TrackMonocular(im, tframe);
-        //  cv::Mat fusedGrid = SLAMO.grid->projectGrid(SLAM.mCurrentGrid, true, true);
-        //  fusedGridWriter.write(fusedGrid);
-        //  if (fusedGrid.size().width > 0 && fusedGrid.size().height > 0)
-        //      cv::imshow("Fused Grid", fusedGrid);
-        //  double mT = 1e3 / fps;
-        //  char key = cv::waitKey(mT);
+        cv::Mat Tcw = SLAM.TrackMonocular(im, tframe, preprocessToolsIm, preprocessToolsOrgansIm);
+        // metrics.updatePosition(Tcw, vIsHorizontal[ni], ni);
+        //  SLAMO.TrackMonocular(im, tframe);
+        //   cv::Mat fusedGrid = SLAMO.grid->projectGrid(SLAM.mCurrentGrid, true, true);
+        //   fusedGridWriter.write(fusedGrid);
+        //   if (fusedGrid.size().width > 0 && fusedGrid.size().height > 0)
+        //       cv::imshow("Fused Grid", fusedGrid);
+        //   double mT = 1e3 / fps;
+        //   char key = cv::waitKey(mT);
 
         // // if key is q
         // if (key == 'q')
@@ -141,16 +178,16 @@ int main(int argc, char **argv)
     // SLAMO.Shutdown();
 
     // Tracking time statistics
-    sort(vTimesTrack.begin(), vTimesTrack.end());
+    std::sort(vTimesTrack.begin(), vTimesTrack.end());
     float totaltime = 0;
     for (int ni = 0; ni < nImages; ni++)
     {
         totaltime += vTimesTrack[ni];
     }
-    cout << "-------" << endl
-         << endl;
-    cout << "median tracking time: " << vTimesTrack[nImages / 2] << endl;
-    cout << "mean tracking time: " << totaltime / nImages << endl;
+    std::cout << "-------" << std::endl
+              << std::endl;
+    std::cout << "median tracking time: " << vTimesTrack[nImages / 2] << std::endl;
+    std::cout << "mean tracking time: " << totaltime / nImages << std::endl;
 
     // Save camera trajectory
     SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
@@ -159,7 +196,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void LoadImages(const string &strPathToSequence, vector<string> &vstrImageFilenames, vector<double> &vTimestamps)
+void LoadImages(const string &strPathToSequence, vector<string> &vstrImageFilenames, vector<double> &vTimestamps, vector<bool> &vIsHorizontal, bool shouldUsePreprocessedFrames, vector<string> &vstrToolsImageFilenames, vector<string> &vstrToolsOrgansImageFilenames, int modeDynamic, int samMode, int skeletMode)
 {
     ifstream fTimes;
     string strPathTimeFile = strPathToSequence + "/times.txt";
@@ -177,6 +214,34 @@ void LoadImages(const string &strPathToSequence, vector<string> &vstrImageFilena
             vTimestamps.push_back(t);
         }
     }
+    fTimes.close();
+
+    ifstream fIsHorizontal;
+    string strPathIsHorizontalFile = strPathToSequence + "/isHorizontal.txt";
+
+    // test if file exists
+    if (!ifstream(strPathIsHorizontalFile))
+    {
+        std::cout << "isHorizontal.txt not found" << std::endl;
+    }
+    else
+    {
+        fIsHorizontal.open(strPathIsHorizontalFile.c_str());
+        while (!fIsHorizontal.eof())
+        {
+            string s;
+            getline(fIsHorizontal, s);
+            if (!s.empty())
+            {
+                stringstream ss;
+                ss << s;
+                bool isHorizontal;
+                ss >> isHorizontal;
+                vIsHorizontal.push_back(isHorizontal);
+            }
+        }
+        fIsHorizontal.close();
+    }
 
     string strPrefixLeft = strPathToSequence + "/frames/";
 
@@ -188,5 +253,34 @@ void LoadImages(const string &strPathToSequence, vector<string> &vstrImageFilena
         stringstream ss;
         ss << setfill('0') << setw(6) << i;
         vstrImageFilenames[i] = strPrefixLeft + ss.str() + ".png";
+    }
+    vstrToolsImageFilenames.resize(nTimes);
+    vstrToolsOrgansImageFilenames.resize(nTimes);
+
+    if (shouldUsePreprocessedFrames)
+    {
+        //// TOOLS
+        if (modeDynamic == 1 || modeDynamic == 3)
+        {
+            string strPrefixTools = strPathToSequence + "/preSegmentedFramesTools/";
+
+            for (int i = 0; i < nTimes; i++)
+            {
+                stringstream ss;
+                ss << setfill('0') << setw(6) << i;
+                vstrToolsImageFilenames[i] = strPrefixTools + ss.str() + ".png";
+            }
+        }
+        if (modeDynamic == 3)
+        {
+            string strPrefixToolsOrgans = strPathToSequence + "/preSegmentedFramesToolsOrgans/sam" + to_string(samMode) + "/skelet" + to_string(skeletMode) + "/";
+
+            for (int i = 0; i < nTimes; i++)
+            {
+                stringstream ss;
+                ss << setfill('0') << setw(6) << i;
+                vstrToolsOrgansImageFilenames[i] = strPrefixToolsOrgans + ss.str() + ".png";
+            }
+        }
     }
 }

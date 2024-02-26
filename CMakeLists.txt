@@ -46,6 +46,11 @@ find_package(Eigen3 3.1.0 REQUIRED NO_MODULE)
 message(STATUS "Eigen3 include dirs: ${EIGEN3_INCLUDE_DIR}")
 find_package(Pangolin REQUIRED PATHS "/usr/local/include")
 
+# set(CMAKE_TOOLCHAIN_FILE "/home/jbjoannic/Documents/Recherche/orbSlam/segment-anything-cpp-wrapper-1.5/vcpkg/scripts/buildsystems/vcpkg.cmake")
+
+set(onnxruntime_lib /home/jbjoannic/Documents/Recherche/orbSlam/segment-anything-cpp-wrapper-1.5/models/onnxruntime-linux-x64-gpu-1.14.1/lib/libonnxruntime.so)
+
+
 include_directories(
 ${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/include
@@ -80,6 +85,9 @@ src/Initializer.cc
 src/Viewer.cc
 src/ThreeDimensionalFrame.cc
 src/RobotSurgerySegmentation.cc
+src/PositionWriter.cc
+#src/Metrics.cc
+src/Graph.cc
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -88,42 +96,44 @@ ${EIGEN3_LIBS}
 ${Pangolin_LIBRARIES}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+${onnxruntime_lib}
 ${TORCH_LIBRARIES}
+/home/jbjoannic/Documents/Recherche/orbSlam/segment-anything-cpp-wrapper-1.5/build/libsam_cpp_lib.so
 )
 
 
 # Build examples
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
 
-add_executable(rgbd_tum
-Examples/RGB-D/rgbd_tum.cc)
-target_link_libraries(rgbd_tum ${PROJECT_NAME})
+# add_executable(rgbd_tum
+# Examples/RGB-D/rgbd_tum.cc)
+# target_link_libraries(rgbd_tum ${PROJECT_NAME})
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
 
-add_executable(stereo_kitti
-Examples/Stereo/stereo_kitti.cc)
-target_link_libraries(stereo_kitti ${PROJECT_NAME})
+# add_executable(stereo_kitti
+# Examples/Stereo/stereo_kitti.cc)
+# target_link_libraries(stereo_kitti ${PROJECT_NAME})
 
-add_executable(stereo_euroc
-Examples/Stereo/stereo_euroc.cc)
-target_link_libraries(stereo_euroc ${PROJECT_NAME})
+# add_executable(stereo_euroc
+# Examples/Stereo/stereo_euroc.cc)
+# target_link_libraries(stereo_euroc ${PROJECT_NAME})
 
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
 
-add_executable(mono_tum
-Examples/Monocular/mono_tum.cc)
-target_link_libraries(mono_tum ${PROJECT_NAME})
+# add_executable(mono_tum
+# Examples/Monocular/mono_tum.cc)
+# target_link_libraries(mono_tum ${PROJECT_NAME})
 
-add_executable(mono_kitti
-Examples/Monocular/mono_kitti.cc)
-target_link_libraries(mono_kitti ${PROJECT_NAME})
+# add_executable(mono_kitti
+# Examples/Monocular/mono_kitti.cc)
+# target_link_libraries(mono_kitti ${PROJECT_NAME})
 
-add_executable(mono_euroc
-Examples/Monocular/mono_euroc.cc)
-target_link_libraries(mono_euroc ${PROJECT_NAME})
+# add_executable(mono_euroc
+# Examples/Monocular/mono_euroc.cc)
+# target_link_libraries(mono_euroc ${PROJECT_NAME})
 
 add_executable(mono_lab
 Examples/Monocular/mono_lab.cc)
